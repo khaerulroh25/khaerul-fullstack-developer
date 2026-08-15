@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 import { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
 import { hashPassword, comparePassword } from '../utils/password.util.js';
@@ -26,6 +27,18 @@ export class AuthService {
         role: input.role,
         phone: input.phone,
         avatarUrl: input.avatarUrl || undefined,
+        ...(input.role === Role.RECRUITER
+          ? {
+              companies: {
+                create: {
+                  name: `Perusahaan ${input.fullName}`,
+                  industry: 'Teknologi & Layanan Bisnis',
+                  location: 'Jakarta, Indonesia',
+                  description: `Profil perusahaan yang dikelola oleh ${input.fullName}`,
+                },
+              },
+            }
+          : {}),
       },
       select: {
         id: true,
@@ -36,6 +49,16 @@ export class AuthService {
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,
+        companies: {
+          select: {
+            id: true,
+            name: true,
+            industry: true,
+            location: true,
+            logoUrl: true,
+            website: true,
+          },
+        },
       },
     });
 

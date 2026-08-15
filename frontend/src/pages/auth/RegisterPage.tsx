@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Briefcase,
   AlertCircle,
+  Check,
 } from 'lucide-react';
 import type { AuthUser, UserRole } from '../../types/index.js';
 import { authService } from '../../services/auth.service.js';
@@ -155,41 +156,79 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
             </div>
           )}
 
-          {/* Pemilihan Peran (Role Selector) */}
-          <div className="mb-5">
-            <label className="mb-2 block text-xs font-semibold text-slate-300">
-              Daftar Sebagai:
-            </label>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setRole('JOB_SEEKER')}
-                className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
-                  role === 'JOB_SEEKER'
-                    ? 'border-amber-400 bg-amber-400/10 text-amber-400'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <User className="h-4 w-4" />
-                <span>Pencari Kerja</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('RECRUITER')}
-                className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
-                  role === 'RECRUITER'
-                    ? 'border-amber-400 bg-amber-400/10 text-amber-400'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <Briefcase className="h-4 w-4" />
-                <span>Perekrut (HR)</span>
-              </button>
-            </div>
-          </div>
-
           {/* Formulir Pendaftaran */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Pemilihan Peran (Role Selector dengan Checklist Indikator) */}
+            <div>
+              <label className="mb-2 block text-xs font-semibold text-slate-300">
+                Daftar Sebagai (Pilih Peran Akun):
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Opsi 1: Pencari Kerja (Default) */}
+                <button
+                  type="button"
+                  onClick={() => setRole('JOB_SEEKER')}
+                  className={`flex w-full text-left cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all select-none focus:outline-none ${
+                    role === 'JOB_SEEKER'
+                      ? 'border-amber-400 bg-amber-400/10 text-white shadow-sm ring-1 ring-amber-400/30'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700 hover:bg-slate-900'
+                  }`}
+                >
+                  <div
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all ${
+                      role === 'JOB_SEEKER'
+                        ? 'border-amber-400 bg-amber-400 text-slate-950 shadow-sm'
+                        : 'border-slate-700 bg-slate-800 text-transparent'
+                    }`}
+                  >
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <User className={`h-3.5 w-3.5 ${role === 'JOB_SEEKER' ? 'text-amber-400' : 'text-slate-500'}`} />
+                      <span className={role === 'JOB_SEEKER' ? 'text-amber-300' : 'text-slate-200'}>
+                        Pencari Kerja
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-400 leading-tight">
+                      Mencari & melamar pekerjaan
+                    </p>
+                  </div>
+                </button>
+
+                {/* Opsi 2: Perekrut (HR) */}
+                <button
+                  type="button"
+                  onClick={() => setRole('RECRUITER')}
+                  className={`flex w-full text-left cursor-pointer items-start gap-3 rounded-2xl border p-3.5 transition-all select-none focus:outline-none ${
+                    role === 'RECRUITER'
+                      ? 'border-amber-400 bg-amber-400/10 text-white shadow-sm ring-1 ring-amber-400/30'
+                      : 'border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700 hover:bg-slate-900'
+                  }`}
+                >
+                  <div
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all ${
+                      role === 'RECRUITER'
+                        ? 'border-amber-400 bg-amber-400 text-slate-950 shadow-sm'
+                        : 'border-slate-700 bg-slate-800 text-transparent'
+                    }`}
+                  >
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <Briefcase className={`h-3.5 w-3.5 ${role === 'RECRUITER' ? 'text-amber-400' : 'text-slate-500'}`} />
+                      <span className={role === 'RECRUITER' ? 'text-amber-300' : 'text-slate-200'}>
+                        Perekrut (HR)
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-400 leading-tight">
+                      Pasang lowongan & rekrut
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
             <div>
               <label htmlFor="reg-fullname" className="mb-1.5 block text-xs font-semibold text-slate-300">
                 Nama Lengkap
