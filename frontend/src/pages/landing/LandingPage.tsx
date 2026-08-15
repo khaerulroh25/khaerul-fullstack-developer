@@ -11,12 +11,18 @@ import { CtaBanner } from '../../components/landing/CtaBanner.js';
 import { JobFilter } from '../../components/jobs/JobFilter.js';
 import { JobCard } from '../../components/jobs/JobCard.js';
 
+import type { DynamicCategory } from '../../hooks/useJobFilters.js';
+
 /**
  * Kontrak Properti untuk Komponen LandingPage
  */
 interface LandingPageProps {
   /** Daftar lowongan yang telah melalui proses penyaringan data */
   filteredJobs: Job[];
+  /** Status memuat data lowongan dari backend */
+  isLoading?: boolean;
+  /** Daftar kategori dinamis yang diekstrak dari database */
+  availableCategories?: DynamicCategory[];
   /** State parameter penyaringan aktif (kata kunci, kategori, tipe kerja, dll) */
   filters: JobFilterState;
   /** Callback untuk memperbarui kriteria filter */
@@ -40,14 +46,43 @@ interface LandingPageProps {
 }
 
 /**
+ * Komponen Skeleton Loading untuk Kartu Lowongan Kerja
+ */
+const JobCardSkeleton: React.FC = () => (
+  <div className="flex flex-col justify-between rounded-xl bg-white p-6 shadow-sm border border-slate-200 animate-pulse">
+    <div>
+      <div className="mb-4 flex items-center gap-3.5">
+        <div className="h-12 w-12 rounded-lg bg-slate-200" />
+        <div className="space-y-2 flex-1">
+          <div className="h-4 w-32 bg-slate-200 rounded" />
+          <div className="h-3 w-20 bg-slate-200 rounded" />
+        </div>
+      </div>
+      <div className="h-5 w-3/4 bg-slate-200 rounded mb-3" />
+      <div className="flex gap-2 mb-4">
+        <div className="h-6 w-16 bg-slate-200 rounded" />
+        <div className="h-6 w-20 bg-slate-200 rounded" />
+      </div>
+      <div className="h-4 w-28 bg-slate-200 rounded mb-4" />
+      <div className="space-y-1.5 mb-5">
+        <div className="h-3 w-full bg-slate-200 rounded" />
+        <div className="h-3 w-4/5 bg-slate-200 rounded" />
+      </div>
+    </div>
+    <div className="flex gap-2.5 border-t border-slate-100 pt-4">
+      <div className="h-8 flex-1 bg-slate-200 rounded-lg" />
+      <div className="h-8 flex-[1.2] bg-slate-200 rounded-lg" />
+    </div>
+  </div>
+);
+
+/**
  * Komponen Utama Halaman Depan (Landing Page)
- *
- * Mengintegrasikan seluruh seksi utama aplikasi seperti Hero Banner, Metrik Platform,
- * Eksplorasi Kategori, Katalog Lowongan Terfilter, Profil Perusahaan, dan Call to Action.
- * Dioptimalkan dengan React.memo, komputasi paginasi berbasis useMemo, dan layout Tailwind CSS responsif.
  */
 export const LandingPage: React.FC<LandingPageProps> = React.memo(({
   filteredJobs,
+  isLoading = false,
+  availableCategories = [],
   filters,
   onFilterChange,
   onResetFilters,
@@ -59,20 +94,21 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
   hasUserApplied,
   onScrollToJobs,
 }) => {
-  // Manajemen Status Paginasi Sisi Klien untuk Menjaga Performa Rendering DOM
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  // Kalkulasi total halaman berdasarkan jumlah data hasil filter
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage) || 1;
 
-  // Memotong subset data lowongan yang ditampilkan pada halaman aktif
+  const categoryNames = useMemo(
+    () => availableCategories.map((c) => c.name),
+    [availableCategories]
+  );
+
   const paginatedJobs = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredJobs.slice(start, start + itemsPerPage);
   }, [filteredJobs, currentPage, itemsPerPage]);
 
-  // Handler navigasi perpindahan halaman dengan auto-scroll ke katalog
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     const catalogElem = document.getElementById('jobs-catalog');
@@ -87,6 +123,7 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
       <HeroSection
         onSearch={onHeroSearch}
         onSelectCategory={onSelectCategory}
+        categories={categoryNames}
       />
 
       {/* Seksi Ringkasan Metrik & Statistik Platform */}
@@ -96,6 +133,7 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
       <CategorySection
         selectedCategory={filters.category}
         onSelectCategory={onSelectCategory}
+        categories={availableCategories}
       />
 
       {/* Seksi Katalog Lowongan Kerja & Sidebar Filter Interaktif */}
@@ -123,13 +161,21 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
                 onFilterChange={onFilterChange}
                 onResetFilters={onResetFilters}
                 totalJobs={filteredJobs.length}
+                categories={categoryNames}
               />
             </aside>
 
             {/* Kolom Kanan: Daftar Kartu Lowongan & Kontrol Navigasi Paginasi */}
             <div className="min-w-0">
-              {filteredJobs.length === 0 ? (
-                /* State Kosong (Empty State) Ketika Data Tidak Ditemukan */
+              {isLoading ? (
+                /* Skeleton Loading State Saat Fetching Data dari API */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <JobCardSkeleton key={idx} />
+                  ))}
+                </div>
+              ) : filteredJobs.length === 0 ? (
+                /* State Kosong (Empty State) */
                 <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
                   <Frown className="mx-auto mb-4 h-12 w-12 text-slate-400" />
                   <h3 className="text-lg font-bold text-slate-900">
@@ -140,7 +186,7 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
                   </p>
                   <button
                     onClick={onResetFilters}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brandyellow px-5 py-2.5 text-xs font-bold text-slate-950 shadow-sm transition hover:bg-brandyellow-dark active:scale-95"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 active:scale-95"
                   >
                     Reset Semua Filter
                   </button>
@@ -169,7 +215,6 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {/* Tombol Halaman Sebelumnya */}
                         <button
                           onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                           disabled={currentPage === 1}
@@ -179,7 +224,6 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
                           <span>Sebelumnya</span>
                         </button>
 
-                        {/* Indikator Nomor Halaman */}
                         <div className="flex items-center gap-1">
                           {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                             <button
@@ -196,7 +240,6 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
                           ))}
                         </div>
 
-                        {/* Tombol Halaman Selanjutnya */}
                         <button
                           onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                           disabled={currentPage === totalPages}

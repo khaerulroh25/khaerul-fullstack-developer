@@ -9,7 +9,7 @@ import {
   Layers,
   ArrowRight,
 } from 'lucide-react';
-import { CATEGORIES_LIST } from '../../data/dummyData.js';
+import type { DynamicCategory } from '../../hooks/useJobFilters.js';
 
 /**
  * Kontrak Properti untuk Komponen CategorySection
@@ -19,42 +19,49 @@ interface CategorySectionProps {
   selectedCategory: string;
   /** Callback untuk memilih atau membatalkan pilihan kategori */
   onSelectCategory: (category: string) => void;
+  /** Daftar kategori 100% dinamis dari database */
+  categories: DynamicCategory[];
 }
 
 /**
- * Pemetaan Ikon Kategori Statis
- * Didefinisikan di luar komponen untuk mencegah re-evaluasi fungsi pada setiap render
+ * Pemetaan Ikon Kategori Dinamis
  */
 const renderCategoryIcon = (categoryName: string) => {
-  switch (categoryName) {
-    case 'Software Engineering':
-      return <Code className="h-6 w-6" />;
-    case 'Product Management':
-      return <Briefcase className="h-6 w-6" />;
-    case 'DevOps & Cloud':
-      return <Server className="h-6 w-6" />;
-    case 'Design & Creative':
-      return <Palette className="h-6 w-6" />;
-    case 'Data & Analytics':
-      return <BarChart3 className="h-6 w-6" />;
-    case 'Banking & Finance':
-      return <CreditCard className="h-6 w-6" />;
-    default:
-      return <Layers className="h-6 w-6" />;
+  const lower = categoryName.toLowerCase();
+  if (lower.includes('software') || lower.includes('engineer') || lower.includes('developer') || lower.includes('tech')) {
+    return <Code className="h-6 w-6" />;
   }
+  if (lower.includes('product') || lower.includes('project') || lower.includes('management')) {
+    return <Briefcase className="h-6 w-6" />;
+  }
+  if (lower.includes('devops') || lower.includes('cloud') || lower.includes('infra') || lower.includes('system')) {
+    return <Server className="h-6 w-6" />;
+  }
+  if (lower.includes('design') || lower.includes('creative') || lower.includes('ui') || lower.includes('ux')) {
+    return <Palette className="h-6 w-6" />;
+  }
+  if (lower.includes('data') || lower.includes('analytics') || lower.includes('bi')) {
+    return <BarChart3 className="h-6 w-6" />;
+  }
+  if (lower.includes('bank') || lower.includes('finance') || lower.includes('keuangan')) {
+    return <CreditCard className="h-6 w-6" />;
+  }
+  return <Layers className="h-6 w-6" />;
 };
 
 /**
  * Komponen Seksi Eksplorasi Kategori Industri
- *
- * Menampilkan kartu kategori pekerjaan populer beserta jumlah lowongan aktif.
- * Mengaktifkan penyaringan cepat hanya dengan satu kali klik.
- * Dioptimalkan dengan React.memo dan styling Tailwind CSS responsif.
+ * Menampilkan kartu kategori yang 100% diekstrak dinamis dari data database PostgreSQL
  */
 export const CategorySection: React.FC<CategorySectionProps> = React.memo(({
   selectedCategory,
   onSelectCategory,
+  categories,
 }) => {
+  if (!categories || categories.length === 0) {
+    return null;
+  }
+
   return (
     <section id="categories" className="border-b border-slate-200 bg-slate-50 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -68,18 +75,18 @@ export const CategorySection: React.FC<CategorySectionProps> = React.memo(({
               </span>
             </div>
             <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-              Kategori Lowongan Terpopuler
+              Kategori Lowongan Tersedia
             </h2>
           </div>
 
           <p className="max-w-md text-xs sm:text-sm text-slate-500">
-            Temukan lowongan yang sesuai dengan minat dan spesialisasi keahlian karier Anda.
+            Temukan lowongan yang sesuai dengan bidang dan spesialisasi karier Anda.
           </p>
         </div>
 
-        {/* Grid Kartu Kategori */}
+        {/* Grid Kartu Kategori Dinamis */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {CATEGORIES_LIST.map((cat) => {
+          {categories.map((cat) => {
             const isSelected = selectedCategory === cat.name;
 
             return (

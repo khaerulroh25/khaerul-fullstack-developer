@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Briefcase, ArrowRight, TrendingUp } from 'lucide-react';
-import { CATEGORIES_LIST } from '../../data/dummyData.js';
 
 /**
  * Daftar kata kunci pencarian populer (trending)
@@ -22,17 +21,13 @@ interface HeroSectionProps {
   onSearch: (keyword: string, location: string, category: string) => void;
   /** Callback ketika pengguna memilih kategori tertentu */
   onSelectCategory?: (category: string) => void;
+  /** Daftar kategori unik dinamis dari database */
+  categories?: string[];
 }
 
-/**
- * Komponen Seksi Pencarian Utama (Hero Section)
- *
- * Menampilkan headline utama platform, formulir pencarian terpadu multi-kriteria
- * (posisi, lokasi, kategori), serta pintasan kata kunci populer.
- * Dioptimalkan dengan React.memo dan styling Tailwind CSS responsif.
- */
 export const HeroSection: React.FC<HeroSectionProps> = React.memo(({
   onSearch,
+  categories = [],
 }) => {
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
@@ -109,9 +104,9 @@ export const HeroSection: React.FC<HeroSectionProps> = React.memo(({
                 className="w-full cursor-pointer bg-transparent text-xs sm:text-sm font-medium text-slate-800 outline-none"
               >
                 <option value="">Semua Kategori</option>
-                {CATEGORIES_LIST.map((cat) => (
-                  <option key={cat.name} value={cat.name} className="text-slate-900">
-                    {cat.name}
+                {categories.map((catName) => (
+                  <option key={catName} value={catName} className="text-slate-900">
+                    {catName}
                   </option>
                 ))}
               </select>
