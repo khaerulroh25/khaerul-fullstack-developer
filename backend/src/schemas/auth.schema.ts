@@ -16,7 +16,7 @@ export const registerSchema = z.object({
     .max(100, 'Nama lengkap maksimal 100 karakter')
     .trim(),
   role: z.nativeEnum(Role, {
-    errorMap: () => ({ message: 'Role harus salah satu dari: JOB_SEEKER, RECRUITER, ADMIN' }),
+    errorMap: () => ({ message: 'Role harus salah satu dari: JOB_SEEKER, RECRUITER' }),
   }).default(Role.JOB_SEEKER),
   phone: z.string().optional(),
   avatarUrl: z.string().url('Format URL avatar tidak valid').optional().or(z.literal('')),
