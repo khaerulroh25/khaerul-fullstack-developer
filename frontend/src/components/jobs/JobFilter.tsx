@@ -1,33 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Filter, RotateCcw, MapPin, Search, X } from 'lucide-react';
 import type { JobFilterState } from '../../types/index.js';
-import { CATEGORIES_LIST } from '../../data/dummyData.js';
-
-/**
- * Daftar opsi statis untuk tipe pekerjaan (Job Types)
- * Didefinisikan di level modul untuk mencegah re-alokasi memori saat re-render
- */
-const JOB_TYPE_OPTIONS = [
-  { value: '', label: 'Semua Tipe' },
-  { value: 'FULL_TIME', label: 'Full-Time' },
-  { value: 'HYBRID', label: 'Hybrid' },
-  { value: 'REMOTE', label: '100% Remote' },
-  { value: 'CONTRACT', label: 'Kontrak' },
-  { value: 'PART_TIME', label: 'Part-Time' },
-  { value: 'INTERNSHIP', label: 'Magang (Internship)' },
-] as const;
-
-/**
- * Daftar opsi statis untuk tingkat pengalaman kerja
- */
-const EXPERIENCE_LEVEL_OPTIONS = [
-  { value: '', label: 'Semua Level' },
-  { value: 'ENTRY_LEVEL', label: 'Entry Level / Fresh Grad' },
-  { value: 'JUNIOR', label: 'Junior (1-2 Tahun)' },
-  { value: 'MID_LEVEL', label: 'Mid-Level (2-4 Tahun)' },
-  { value: 'SENIOR', label: 'Senior (4+ Tahun)' },
-  { value: 'LEAD', label: 'Lead / Manager (5+ Tahun)' },
-] as const;
+import { JOB_TYPE_OPTIONS, EXPERIENCE_LEVEL_OPTIONS } from '../../data/constants.js';
 
 /**
  * Kontrak Properti untuk Komponen JobFilter
@@ -41,20 +15,16 @@ interface JobFilterProps {
   onResetFilters: () => void;
   /** Total kuantitas lowongan yang lolos penyaringan */
   totalJobs: number;
+  /** Daftar kategori unik dinamis dari database */
+  categories?: string[];
 }
 
-/**
- * Komponen Panel Penyaringan Lowongan Kerja (JobFilter Sidebar)
- *
- * Menyediakan antarmuka multi-filter komprehensif (kata kunci, tipe pekerjaan, level pengalaman,
- * kategori industri, lokasi kerja dengan mekanisme debounce, dan toggle remote).
- * Dioptimalkan dengan React.memo, debounce timer mandiri, dan styling Tailwind CSS sticky sidebar.
- */
 export const JobFilter: React.FC<JobFilterProps> = React.memo(({
   filters,
   onFilterChange,
   onResetFilters,
   totalJobs,
+  categories = [],
 }) => {
   // State lokal untuk input teks agar pengetikan instan dan lancar
   const [localSearch, setLocalSearch] = useState(filters.search || '');
@@ -210,9 +180,9 @@ export const JobFilter: React.FC<JobFilterProps> = React.memo(({
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
           >
             <option value="">Semua Kategori</option>
-            {CATEGORIES_LIST.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name}
+            {categories.map((catName) => (
+              <option key={catName} value={catName}>
+                {catName}
               </option>
             ))}
           </select>
