@@ -29,6 +29,7 @@ export interface AuthUser {
 
 export interface Company {
   id: string;
+  userId?: string;
   name: string;
   industry: string;
   location: string;
