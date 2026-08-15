@@ -258,12 +258,13 @@ export const App: React.FC = () => {
         />
       )}
 
-      {currentPage === "APPLY_JOB" && (
+      {currentPage === 'APPLY_JOB' && (
         <ApplyJobPage
           job={selectedJob}
+          currentUser={currentUser}
           onNavigateBack={() => {
-            if (selectedJob) navigateTo("JOB_DETAIL");
-            else navigateTo("LANDING");
+            if (selectedJob) navigateTo('JOB_DETAIL');
+            else navigateTo('LANDING');
           }}
           onSubmitApplication={handleSubmitApplication}
         />
