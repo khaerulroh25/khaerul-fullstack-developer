@@ -63,6 +63,7 @@ export const App: React.FC = () => {
   const {
     filters,
     filteredJobs,
+    availableCategories,
     handleFilterChange,
     handleResetFilters,
     handleHeroSearch,
@@ -291,6 +292,7 @@ export const App: React.FC = () => {
         <LandingPage
           filteredJobs={filteredJobs}
           isLoading={isJobsLoading}
+          availableCategories={availableCategories}
           filters={filters}
           onFilterChange={handleFilterChange}
           onResetFilters={handleResetFilters}
