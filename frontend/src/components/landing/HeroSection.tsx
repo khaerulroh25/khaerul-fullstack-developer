@@ -2,18 +2,6 @@ import React, { useState } from 'react';
 import { Search, MapPin, Briefcase, ArrowRight, TrendingUp } from 'lucide-react';
 
 /**
- * Daftar kata kunci pencarian populer (trending)
- * Didefinisikan di luar komponen untuk mencegah re-alokasi memori saat re-render
- */
-const TRENDING_TAGS = [
-  'Frontend Developer',
-  'Product Manager',
-  'DevOps Engineer',
-  'UI/UX Designer',
-  'Data Analyst',
-] as const;
-
-/**
  * Kontrak Properti untuk Komponen HeroSection
  */
 interface HeroSectionProps {
@@ -23,11 +11,14 @@ interface HeroSectionProps {
   onSelectCategory?: (category: string) => void;
   /** Daftar kategori unik dinamis dari database */
   categories?: string[];
+  /** Tag pencarian populer yang diekstrak dinamis dari data lowongan di database */
+  popularTags?: string[];
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = React.memo(({
   onSearch,
   categories = [],
+  popularTags = [],
 }) => {
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
@@ -122,26 +113,28 @@ export const HeroSection: React.FC<HeroSectionProps> = React.memo(({
             </button>
           </form>
 
-          {/* Tag Pintasan Pencarian Populer */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <TrendingUp className="h-3.5 w-3.5 text-amber-400" />
-              <span>Populer:</span>
+          {/* Tag Pintasan Pencarian Populer Dinamis */}
+          {popularTags.length > 0 && (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <TrendingUp className="h-3.5 w-3.5 text-amber-400" />
+                <span>Populer:</span>
+              </div>
+              {popularTags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => {
+                    setKeyword(tag);
+                    onSearch(tag, location.trim(), category);
+                  }}
+                  className="rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400 hover:text-amber-400 active:scale-95"
+                >
+                  {tag}
+                </button>
+              ))}
             </div>
-            {TRENDING_TAGS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => {
-                  setKeyword(tag);
-                  onSearch(tag, location.trim(), category);
-                }}
-                className="rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-xs text-slate-300 transition hover:border-amber-400 hover:text-amber-400 active:scale-95"
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+          )}
         </div>
       </div>
     </section>

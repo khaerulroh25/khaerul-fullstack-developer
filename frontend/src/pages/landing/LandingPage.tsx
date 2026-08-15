@@ -104,6 +104,14 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
     [availableCategories]
   );
 
+  const popularTags = useMemo(() => {
+    if (!filteredJobs || filteredJobs.length === 0) return [];
+    const titles = Array.from(
+      new Set(filteredJobs.map((j) => j.title.trim()).filter(Boolean))
+    );
+    return titles.slice(0, 5);
+  }, [filteredJobs]);
+
   const paginatedJobs = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredJobs.slice(start, start + itemsPerPage);
@@ -124,6 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = React.memo(({
         onSearch={onHeroSearch}
         onSelectCategory={onSelectCategory}
         categories={categoryNames}
+        popularTags={popularTags}
       />
 
       {/* Seksi Ringkasan Metrik & Statistik Platform */}
