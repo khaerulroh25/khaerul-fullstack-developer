@@ -169,7 +169,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
               <button
                 type="button"
                 disabled={isLoading}
-                onClick={() => handleQuickLogin('pelamar@indokerja.id', 'Password123!')}
+                onClick={() => handleQuickLogin('pelamar@yukkerja.id', 'Password123!')}
                 className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-400 px-3 py-2 text-xs font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 active:scale-95 disabled:opacity-50"
               >
                 <UserCheck className="h-3.5 w-3.5 shrink-0" />
@@ -179,7 +179,7 @@ export const LoginPage: React.FC<LoginPageProps> = React.memo(({
               <button
                 type="button"
                 disabled={isLoading}
-                onClick={() => handleQuickLogin('recruiter.goto@indokerja.id', 'Password123!')}
+                onClick={() => handleQuickLogin('recruiter.goto@yukkerja.id', 'Password123!')}
                 className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-slate-200 shadow-sm transition hover:border-amber-400 hover:text-amber-400 active:scale-95 disabled:opacity-50"
               >
                 <Briefcase className="h-3.5 w-3.5 shrink-0 text-amber-400" />

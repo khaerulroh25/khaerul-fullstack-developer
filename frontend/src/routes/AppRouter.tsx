@@ -259,7 +259,7 @@ export const AppRouter: React.FC<AppRouterProps> = React.memo(({
             selectedJob
               ? hasUserApplied(
                   selectedJob.id,
-                  currentUser ? currentUser.email : "pelamar@indokerja.id",
+                  currentUser ? currentUser.email : "pelamar@yukkerja.id",
                 )
               : false
           }
@@ -319,7 +319,7 @@ export const AppRouter: React.FC<AppRouterProps> = React.memo(({
           hasUserApplied={(jobId) =>
             hasUserApplied(
               jobId,
-              currentUser ? currentUser.email : "pelamar@indokerja.id",
+              currentUser ? currentUser.email : "pelamar@yukkerja.id",
             )
           }
           onScrollToJobs={scrollToJobs}
