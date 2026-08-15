@@ -223,17 +223,28 @@ export const App: React.FC = () => {
   );
 
   const handleUpdateApplicationStatus = useCallback(
-    (
+    async (
       applicationId: string,
       newStatus: ApplicationStatus,
       recruiterNotes?: string,
-    ) => {
-      updateApplicationStatus(applicationId, newStatus, recruiterNotes);
-      addToast(
-        "success",
-        "Status Pelamar Diperbarui",
-        `Tahapan seleksi kandidat berhasil diubah ke ${newStatus}.`,
-      );
+    ): Promise<boolean> => {
+      try {
+        await updateApplicationStatus(applicationId, newStatus, recruiterNotes);
+        addToast(
+          "success",
+          "Status Pelamar Diperbarui",
+          `Tahapan seleksi kandidat berhasil diubah ke ${newStatus}.`,
+        );
+        return true;
+      } catch (err: any) {
+        const apiErr = parseApiError(err);
+        addToast(
+          "error",
+          "Gagal Memperbarui Status",
+          apiErr.message || "Terjadi kesalahan saat memperbarui status lamaran.",
+        );
+        return false;
+      }
     },
     [updateApplicationStatus, addToast],
   );
