@@ -22,3 +22,14 @@ export const EXPERIENCE_LEVEL_OPTIONS = [
   { value: 'SENIOR', label: 'Senior (4+ Tahun)' },
   { value: 'LEAD', label: 'Lead / Manager (5+ Tahun)' },
 ] as const;
+
+/**
+ * Opsi Status Lamaran sesuai Enum Database Prisma (ApplicationStatus)
+ */
+export const APPLICATION_STATUS_OPTIONS = [
+  { value: 'SUBMITTED', label: 'Applied (Berkas Masuk)' },
+  { value: 'SCREENING', label: 'Screening (Ditinjau)' },
+  { value: 'INTERVIEW', label: 'Interview (Wawancara)' },
+  { value: 'OFFERED', label: 'Accepted / Offered (Diterima)' },
+  { value: 'REJECTED', label: 'Rejected (Belum Lolos)' },
+] as const;

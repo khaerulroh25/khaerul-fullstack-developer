@@ -6,16 +6,6 @@
 
 /**
  * Memformat rentang nominal gaji ke dalam standar format Rupiah (IDR)
- *
- * @param min - Nominal batas bawah gaji (opsional)
- * @param max - Nominal batas atas gaji (opsional)
- * @param isDisclosed - Status keterbukaan informasi gaji (default: true)
- * @param periodSuffix - Sufiks periode pembayaran (default: '/ bln')
- * @returns String representasi gaji yang siap ditampilkan ke UI
- *
- * @example
- * formatSalary(8000000, 12000000) // "Rp 8 Jt - 12 Jt / bln"
- * formatSalary(undefined, undefined, false) // "Gaji Kompetitif (Dirahasiakan)"
  */
 export const formatSalary = (
   min?: number,
@@ -41,9 +31,6 @@ export const formatSalary = (
 
 /**
  * Mengonversi kode enum tipe pekerjaan (Job Type) ke label yang ramah pengguna
- *
- * @param type - Nilai enum tipe pekerjaan
- * @returns Label terbaca dalam Bahasa Indonesia / standar industri
  */
 export const getJobTypeLabel = (type: string): string => {
   switch (type) {
@@ -66,9 +53,6 @@ export const getJobTypeLabel = (type: string): string => {
 
 /**
  * Mengonversi kode tingkat pengalaman ke label deskriptif
- *
- * @param level - Nilai enum atau string pengalaman kerja
- * @returns Label pengalaman kerja terformat
  */
 export const getExperienceLevelLabel = (level: string): string => {
   switch (level) {
@@ -88,11 +72,27 @@ export const getExperienceLevelLabel = (level: string): string => {
 };
 
 /**
+ * Mengonversi kode status lamaran ke label yang ramah pengguna
+ */
+export const getApplicationStatusLabel = (status: string): string => {
+  switch (status) {
+    case 'SUBMITTED':
+      return 'Applied';
+    case 'SCREENING':
+      return 'Screening';
+    case 'INTERVIEW':
+      return 'Interview';
+    case 'OFFERED':
+      return 'Accepted';
+    case 'REJECTED':
+      return 'Rejected';
+    default:
+      return status;
+  }
+};
+
+/**
  * Memformat string tanggal ISO ke standar penanggalan lokal Indonesia
- *
- * @param dateString - String tanggal format ISO
- * @param includeTime - Opsi menampilkan jam dan menit
- * @returns Tanggal terformat (cth: "15 Agu 2026")
  */
 export const formatDateID = (dateString: string, includeTime = false): string => {
   try {
