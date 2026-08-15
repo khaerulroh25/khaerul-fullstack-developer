@@ -71,21 +71,21 @@ export const Navbar: React.FC<NavbarProps> = React.memo(
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 onScrollToJobs();
               }}
-              className="flex items-center gap-3 cursor-pointer select-none group"
+              className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none group"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400 font-black text-base tracking-tighter text-slate-950 shadow-md transition group-hover:scale-105">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-amber-400 font-black text-sm sm:text-base tracking-tighter text-slate-950 shadow-md transition group-hover:scale-105">
                 YK
               </div>
               <div>
                 <div className="flex items-center leading-none">
-                  <span className="text-xl font-black text-white tracking-tight">
+                  <span className="text-lg sm:text-xl font-black text-white tracking-tight">
                     yuk
                   </span>
-                  <span className="text-xl font-black text-amber-400 tracking-tight">
+                  <span className="text-lg sm:text-xl font-black text-amber-400 tracking-tight">
                     Kerja
                   </span>
                 </div>
-                <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <span className="hidden xs:block sm:block mt-0.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Portal Karier Indonesia
                 </span>
               </div>
@@ -264,10 +264,10 @@ export const Navbar: React.FC<NavbarProps> = React.memo(
                 )}
               </div>
             ) : (
-              /* Tombol Masuk / Daftar Tunggal Terpadu */
+              /* Tombol Masuk / Daftar Tunggal Terpadu (Hanya Tampil di Desktop, di Mobile ada di dalam Drawer) */
               <button
                 onClick={onNavigateToLogin}
-                className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 active:scale-95"
+                className="hidden md:inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs sm:text-sm font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 active:scale-95"
               >
                 <LogIn className="h-4 w-4" />
                 <span>Masuk / Daftar</span>

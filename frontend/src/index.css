@@ -334,3 +334,16 @@ button, input, select, textarea {
   .grid-mobile-1 { grid-template-columns: 1fr !important; }
   .flex-mobile-col { flex-direction: column !important; }
 }
+
+@media (max-width: 480px) {
+  .toast-container {
+    right: 12px;
+    left: 12px;
+    bottom: 16px;
+  }
+  .toast {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
