@@ -62,6 +62,9 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
     callback();
   };
 
+  const isRecruiter = currentUser?.role === 'RECRUITER';
+  const roleDisplay = isRecruiter ? 'Perekrut (HR)' : 'Pencari Kerja';
+
   return (
     <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between h-[68px]">
@@ -96,6 +99,7 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
             Jelajah Lowongan
           </button>
 
+          {/* Menu untuk Pelamar: Status Lamaran */}
           <button
             onClick={onNavigateToTracker}
             className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800/60 hover:text-white"
@@ -108,9 +112,14 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
             )}
           </button>
 
+          {/* Menu untuk Recruiter: Kelola Pelamar */}
           <button
             onClick={onNavigateToApplicants}
-            className="rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold text-slate-300 transition hover:bg-slate-800/60 hover:text-white"
+            className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition ${
+              isRecruiter
+                ? 'text-amber-400 hover:bg-amber-400/10'
+                : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+            }`}
           >
             Kelola Pelamar
           </button>
@@ -150,8 +159,8 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
                   <span className="block text-xs font-bold text-slate-100 leading-tight">
                     {currentUser.fullName.split(' ')[0]}
                   </span>
-                  <span className="block text-[10px] font-medium text-amber-400">
-                    Pelamar / HR
+                  <span className={`block text-[10px] font-medium ${isRecruiter ? 'text-amber-400' : 'text-slate-400'}`}>
+                    {roleDisplay}
                   </span>
                 </div>
 
@@ -160,12 +169,21 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
 
               {/* Dropdown Menu Pengguna */}
               {isDropdownOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-60 rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-2xl border border-slate-800 bg-slate-900 p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-100">
                   <div className="mb-1.5 border-b border-slate-800/80 p-3">
-                    <div className="truncate text-xs sm:text-sm font-bold text-white">
-                      {currentUser.fullName}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="truncate text-xs sm:text-sm font-bold text-white">
+                        {currentUser.fullName}
+                      </div>
+                      <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                        isRecruiter
+                          ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
+                          : 'bg-slate-800 text-slate-300 border border-slate-700'
+                      }`}>
+                        {roleDisplay}
+                      </span>
                     </div>
-                    <div className="truncate text-xs text-slate-400">
+                    <div className="truncate text-xs text-slate-400 mt-0.5">
                       {currentUser.email}
                     </div>
                   </div>
@@ -203,7 +221,7 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
                     }}
                     className="flex w-full items-center rounded-xl px-3 py-2 text-left text-xs font-semibold text-slate-300 transition hover:bg-slate-800/60 hover:text-white"
                   >
-                    <span>Kelola Kandidat (ATS)</span>
+                    <span>Kelola Pelamar (ATS)</span>
                   </button>
 
                   <div className="my-1 border-t border-slate-800/60" />
