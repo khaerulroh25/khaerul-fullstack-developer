@@ -1,50 +1,52 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AuthUser } from '../types/index.js';
-
-const STORAGE_KEY = 'indokerja_user';
-
-const DEFAULT_DEMO_USER: AuthUser = {
-  id: 'usr-demo-pelamar',
-  email: 'pelamar@indokerja.id',
-  fullName: 'Ahmad Farhan Pratama',
-  role: 'JOB_SEEKER',
-  phone: '085712345678',
-  avatarUrl:
-    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
-};
+import { authService } from '../services/auth.service.js';
 
 /**
- * Custom hook untuk mengelola status autentikasi pengguna dan sinkronisasi localStorage
+ * Custom hook untuk mengelola status autentikasi pengguna dan sinkronisasi sesi backend
  */
 export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_DEMO_USER;
-    } catch {
-      return DEFAULT_DEMO_USER;
-    }
+    return authService.getStoredUser();
   });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Sinkronisasi ke localStorage saat data currentUser berubah
+  // Verifikasi sesi dan segarkan data profil saat aplikasi pertama kali dimuat
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, [currentUser]);
+    const verifySession = async () => {
+      const token = authService.getToken();
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const user = await authService.getMe();
+        setCurrentUser(user);
+      } catch (error) {
+        console.warn('Sesi tidak valid atau telah berakhir:', error);
+        authService.logout();
+        setCurrentUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifySession();
+  }, []);
 
   const login = useCallback((user: AuthUser) => {
     setCurrentUser(user);
   }, []);
 
   const logout = useCallback(() => {
+    authService.logout();
     setCurrentUser(null);
   }, []);
 
   return {
     currentUser,
+    isLoading,
     login,
     logout,
   };
