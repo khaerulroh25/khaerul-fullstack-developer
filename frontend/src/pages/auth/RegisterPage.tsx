@@ -8,18 +8,18 @@ import {
   ArrowLeft,
   Eye,
   EyeOff,
-  Sparkles,
   Award,
   Zap,
   ShieldCheck,
+  Briefcase,
+  AlertCircle,
 } from 'lucide-react';
-import type { AuthUser } from '../../types/index.js';
+import type { AuthUser, UserRole } from '../../types/index.js';
+import { authService } from '../../services/auth.service.js';
+import { parseApiError } from '../../services/api.js';
+import { AuthSidePanel, type AuthFeatureItem } from '../../components/auth/AuthSidePanel.js';
 
-/**
- * Daftar poin keunggulan pendaftaran akun baru
- * Didefinisikan di level modul untuk mencegah alokasi memori berulang saat re-render
- */
-const REGISTER_BENEFITS = [
+const REGISTER_FEATURES: readonly AuthFeatureItem[] = [
   {
     icon: <Zap className="h-5 w-5 text-amber-400 shrink-0" />,
     title: 'Lamar Cepat 1-Klik',
@@ -37,24 +37,14 @@ const REGISTER_BENEFITS = [
   },
 ] as const;
 
-/**
- * Kontrak Properti untuk Komponen RegisterPage
- */
 interface RegisterPageProps {
-  /** Callback saat pendaftaran akun baru berhasil */
   onRegisterSuccess: (user: AuthUser) => void;
-  /** Callback untuk berpindah ke halaman masuk (login) */
   onNavigateToLogin: () => void;
-  /** Callback untuk kembali ke halaman utama / beranda */
   onNavigateToHome: () => void;
 }
 
 /**
  * Komponen Halaman Pendaftaran Akun (RegisterPage)
- *
- * Menyediakan antarmuka pembuatan akun pelamar baru dengan validasi form komprehensif,
- * panel benefit pendaftaran, serta navigasi integrasi autentikasi.
- * Dioptimalkan dengan React.memo dan styling murni Tailwind CSS responsif.
  */
 export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
   onRegisterSuccess,
@@ -65,13 +55,16 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>('JOB_SEEKER');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Handler pengiriman form pendaftaran
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setGeneralError(null);
     const errs: Record<string, string> = {};
 
     if (!fullName.trim() || fullName.trim().length < 2) {
@@ -80,8 +73,10 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
       errs.email = 'Format email tidak valid';
     }
-    if (!password || password.length < 6) {
-      errs.password = 'Password minimal 6 karakter';
+    if (!password || password.length < 8) {
+      errs.password = 'Password minimal harus 8 karakter';
+    } else if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      errs.password = 'Password harus mengandung kombinasi huruf dan angka';
     }
 
     if (Object.keys(errs).length > 0) {
@@ -92,97 +87,44 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
     setErrors({});
     setIsLoading(true);
 
-    setTimeout(() => {
-      const newUser: AuthUser = {
-        id: `usr-${Date.now()}`,
-        email: email.trim(),
+    try {
+      const { user } = await authService.register({
         fullName: fullName.trim(),
-        role: 'JOB_SEEKER',
+        email: email.trim(),
+        password,
+        role,
         phone: phone.trim() || undefined,
-        avatarUrl:
-          'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
-      };
+      });
 
+      onRegisterSuccess(user);
+    } catch (err) {
+      const { message, fieldErrors } = parseApiError(
+        err,
+        'Pendaftaran gagal. Silakan periksa kembali data Anda.'
+      );
+      setGeneralError(message);
+      setErrors(fieldErrors);
+    } finally {
       setIsLoading(false);
-      onRegisterSuccess(newUser);
-    }, 400);
+    }
   };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] bg-slate-950 text-white">
-      {/* Panel Keunggulan & Branding Sisi Kiri */}
-      <div className="hidden lg:flex flex-col justify-between border-r border-slate-800 bg-slate-900/95 p-12 relative overflow-hidden">
-        {/* Efek Cahaya Latar Belakang (Ambient Light Glow) */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
-
-        {/* Header Panel: Logo Brand & Tombol Kembali */}
-        <div className="relative z-10 flex items-center justify-between">
-          <button
-            onClick={onNavigateToHome}
-            className="flex items-center gap-3 select-none text-left transition hover:opacity-90"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400 font-black text-base tracking-tighter text-slate-950 shadow-md">
-              YK
-            </div>
-            <div>
-              <div className="flex items-center leading-none">
-                <span className="text-xl font-black tracking-tight text-white">yuk</span>
-                <span className="text-xl font-black tracking-tight text-amber-400">Kerja</span>
-              </div>
-              <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                Portal Karier Indonesia
-              </span>
-            </div>
-          </button>
-
-          <button
-            onClick={onNavigateToHome}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/80 px-3.5 py-1.5 text-xs font-semibold text-slate-300 backdrop-blur-sm transition hover:border-amber-400 hover:text-amber-400 active:scale-95"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Beranda</span>
-          </button>
-        </div>
-
-        {/* Konten Manfaat Pembuatan Akun */}
-        <div className="relative z-10 my-8">
-          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/80 px-3 py-1 text-xs font-bold text-amber-400">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Gratis 100% untuk Seluruh Pencari Kerja</span>
-          </div>
-
-          <h2 className="mb-4 text-3xl font-extrabold leading-tight text-white sm:text-4xl">
+      {/* Panel Hero & Branding Sisi Kiri (Komponen Reusable) */}
+      <AuthSidePanel
+        badgeText="Gratis 100% untuk Seluruh Pencari Kerja"
+        title={
+          <>
             Mulai Langkah Karier Gemilang Bersama{' '}
             <span className="text-amber-400">yukKerja</span>
-          </h2>
-
-          <p className="mb-8 max-w-lg text-sm leading-relaxed text-slate-400">
-            Daftarkan diri Anda dalam 2 menit dan dapatkan akses prioritas ke ribuan peluang kerja di perusahaan terdepan Indonesia.
-          </p>
-
-          {/* Daftar Keuntungan Bergabung */}
-          <div className="space-y-3.5">
-            {REGISTER_BENEFITS.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-start gap-3.5 rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 backdrop-blur-sm transition hover:border-slate-700"
-              >
-                <div className="mt-0.5">{item.icon}</div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-200">{item.title}</h4>
-                  <p className="mt-0.5 text-xs text-slate-400 leading-normal">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Lencana Komitmen Keamanan Platform */}
-        <div className="relative z-10 flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 backdrop-blur-sm text-xs text-slate-300">
-          <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span>Seluruh lowongan telah melalui proses kurasi dan verifikasi legalitas perusahaan.</span>
-        </div>
-      </div>
+          </>
+        }
+        description="Daftarkan diri Anda dalam 2 menit dan dapatkan akses prioritas ke ribuan peluang kerja di perusahaan terdepan Indonesia."
+        features={REGISTER_FEATURES}
+        securityNote="Seluruh lowongan telah melalui proses kurasi dan verifikasi legalitas perusahaan."
+        onNavigateToHome={onNavigateToHome}
+      />
 
       {/* Panel Formulir Pendaftaran Sisi Kanan */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12 lg:p-16 bg-slate-950">
@@ -205,9 +147,49 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
             </p>
           </div>
 
+          {/* Alert General Error */}
+          {generalError && (
+            <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-300">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />
+              <span>{generalError}</span>
+            </div>
+          )}
+
+          {/* Pemilihan Peran (Role Selector) */}
+          <div className="mb-5">
+            <label className="mb-2 block text-xs font-semibold text-slate-300">
+              Daftar Sebagai:
+            </label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setRole('JOB_SEEKER')}
+                className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
+                  role === 'JOB_SEEKER'
+                    ? 'border-amber-400 bg-amber-400/10 text-amber-400'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                }`}
+              >
+                <User className="h-4 w-4" />
+                <span>Pencari Kerja</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('RECRUITER')}
+                className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
+                  role === 'RECRUITER'
+                    ? 'border-amber-400 bg-amber-400/10 text-amber-400'
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                <span>Perekrut (HR)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Formulir Pendaftaran */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Input Nama Lengkap */}
             <div>
               <label htmlFor="reg-fullname" className="mb-1.5 block text-xs font-semibold text-slate-300">
                 Nama Lengkap
@@ -232,7 +214,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
               )}
             </div>
 
-            {/* Input Email */}
             <div>
               <label htmlFor="reg-email" className="mb-1.5 block text-xs font-semibold text-slate-300">
                 Alamat Email
@@ -257,10 +238,9 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
               )}
             </div>
 
-            {/* Input Nomor Telepon */}
             <div>
               <label htmlFor="reg-phone" className="mb-1.5 block text-xs font-semibold text-slate-300">
-                Nomor Telepon (WhatsApp)
+                Nomor Telepon / WhatsApp (Opsional)
               </label>
               <div className="relative">
                 <input
@@ -275,10 +255,9 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
               </div>
             </div>
 
-            {/* Input Password */}
             <div>
               <label htmlFor="reg-password" className="mb-1.5 block text-xs font-semibold text-slate-300">
-                Kata Sandi
+                Kata Sandi (Min. 8 karakter, kombinasi huruf & angka)
               </label>
               <div className="relative">
                 <input
@@ -286,7 +265,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimal 6 karakter"
+                  placeholder="Minimal 8 karakter (huruf & angka)"
                   className={`w-full rounded-xl border bg-slate-900 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition focus:ring-2 ${
                     errors.password
                       ? 'border-rose-500 focus:ring-rose-400/20'
@@ -307,7 +286,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
               )}
             </div>
 
-            {/* Tombol Buat Akun */}
             <button
               type="submit"
               disabled={isLoading}
