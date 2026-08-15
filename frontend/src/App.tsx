@@ -26,6 +26,7 @@ import { useJobs } from "./hooks/useJobs.js";
 import { useApplications } from "./hooks/useApplications.js";
 import { useJobFilters } from "./hooks/useJobFilters.js";
 import { useToast } from "./hooks/useToast.js";
+import { parseApiError } from "./services/api.js";
 
 /**
  * Tipe Rute Halaman Aplikasi
@@ -175,14 +176,25 @@ export const App: React.FC = () => {
   );
 
   const handleCreateJob = useCallback(
-    async (jobData: Omit<Job, "id" | "createdAt">) => {
-      const newJob = await createJob(jobData);
-      navigateTo("JOB_DETAIL");
-      addToast(
-        "success",
-        "Lowongan Berhasil Diterbitkan",
-        `Posisi ${newJob.title} di ${newJob.company?.name || 'Perusahaan'} telah aktif.`,
-      );
+    async (jobData: Omit<Job, "id" | "createdAt">): Promise<boolean> => {
+      try {
+        const newJob = await createJob(jobData);
+        navigateTo("JOB_DETAIL");
+        addToast(
+          "success",
+          "Lowongan Berhasil Diterbitkan",
+          `Posisi ${newJob.title} di ${newJob.company?.name || 'Perusahaan'} telah aktif.`,
+        );
+        return true;
+      } catch (err: any) {
+        const apiErr = parseApiError(err);
+        addToast(
+          "error",
+          "Gagal Menerbitkan Lowongan",
+          apiErr.message || "Terjadi kesalahan saat mempublikasikan lowongan ke backend.",
+        );
+        return false;
+      }
     },
     [createJob, navigateTo, addToast],
   );
@@ -308,6 +320,7 @@ export const App: React.FC = () => {
 
       {currentPage === "POST_JOB" && (
         <PostJobPage
+          currentUser={currentUser}
           onNavigateBack={() => navigateTo("LANDING")}
           onSubmitJob={handleCreateJob}
         />
