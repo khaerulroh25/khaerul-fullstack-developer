@@ -52,7 +52,7 @@ export const App: React.FC = () => {
 
   // Custom Hooks untuk Domain Logika Bisnis
   const { currentUser, login, logout } = useAuth();
-  const { jobs, selectedJob, setSelectedJob, createJob } = useJobs();
+  const { jobs, isLoading: isJobsLoading, selectedJob, setSelectedJob, createJob } = useJobs();
   const {
     applications,
     hasUserApplied,
@@ -140,13 +140,13 @@ export const App: React.FC = () => {
   );
 
   const handleCreateJob = useCallback(
-    (jobData: Omit<Job, "id" | "createdAt">) => {
-      const newJob = createJob(jobData);
+    async (jobData: Omit<Job, "id" | "createdAt">) => {
+      const newJob = await createJob(jobData);
       navigateTo("JOB_DETAIL");
       addToast(
         "success",
         "Lowongan Berhasil Diterbitkan",
-        `Posisi ${newJob.title} di ${newJob.company.name} telah aktif.`,
+        `Posisi ${newJob.title} di ${newJob.company?.name || 'Perusahaan'} telah aktif.`,
       );
     },
     [createJob, navigateTo, addToast],
@@ -290,6 +290,7 @@ export const App: React.FC = () => {
       {currentPage === "LANDING" && (
         <LandingPage
           filteredJobs={filteredJobs}
+          isLoading={isJobsLoading}
           filters={filters}
           onFilterChange={handleFilterChange}
           onResetFilters={handleResetFilters}
