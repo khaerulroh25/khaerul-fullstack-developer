@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Briefcase,
@@ -17,30 +17,9 @@ import type {
   ExperienceLevel,
   Company,
 } from '../../types/index.js';
-import { CATEGORIES_LIST, DUMMY_COMPANIES } from '../../data/dummyData.js';
+import { JOB_TYPE_OPTIONS, EXPERIENCE_LEVEL_OPTIONS } from '../../data/constants.js';
+import { companyService } from '../../services/company.service.js';
 import { formatSalary } from '../../utils/formatters.js';
-
-/**
- * Daftar opsi tipe pekerjaan untuk recruiter
- */
-const JOB_TYPE_SELECT_OPTIONS = [
-  { value: 'FULL_TIME', label: 'Full-Time (Penuh Waktu)' },
-  { value: 'HYBRID', label: 'Hybrid (Kombinasi WFH / WFO)' },
-  { value: 'REMOTE', label: '100% Remote (Jarak Jauh)' },
-  { value: 'CONTRACT', label: 'Kontrak / Project-based' },
-  { value: 'INTERNSHIP', label: 'Internship / Magang' },
-] as const;
-
-/**
- * Daftar opsi tingkat pengalaman kerja yang dicari
- */
-const EXPERIENCE_LEVEL_SELECT_OPTIONS = [
-  { value: 'ENTRY_LEVEL', label: 'Entry Level (Fresh Graduate)' },
-  { value: 'JUNIOR', label: 'Junior (1 - 2 Tahun)' },
-  { value: 'MID_LEVEL', label: 'Mid Level (3 - 5 Tahun)' },
-  { value: 'SENIOR', label: 'Senior (5+ Tahun)' },
-  { value: 'LEAD', label: 'Lead / Managerial' },
-] as const;
 
 /**
  * Kontrak Properti untuk Komponen PostJobPage
@@ -52,29 +31,16 @@ interface PostJobPageProps {
   onSubmitJob: (jobData: Omit<Job, 'id' | 'createdAt'>) => void;
 }
 
-/**
- * Komponen Halaman Penerbitan Lowongan Kerja (PostJobPage)
- *
- * Menyediakan formulir publikasi lowongan terstruktur bagi perusahaan dan recruiter,
- * mencakup informasi umum, kompensasi & transparansi gaji, kualifikasi dinamis, benefit,
- * serta fitur promosi lowongan unggulan (featured).
- * Dioptimalkan dengan React.memo, live preview format gaji, dan styling Tailwind CSS responsif.
- */
 export const PostJobPage: React.FC<PostJobPageProps> = React.memo(({
   onNavigateBack,
   onSubmitJob,
 }) => {
-  // State Formulir Penerbitan Lowongan
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [title, setTitle] = useState('');
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(
-    DUMMY_COMPANIES[0]?.id || 'comp-1'
-  );
-  const [category, setCategory] = useState(
-    CATEGORIES_LIST[0]?.name || 'Software Engineering'
-  );
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [category, setCategory] = useState<string>('Software Engineering');
   const [jobType, setJobType] = useState<JobType>('FULL_TIME');
-  const [experienceLevel, setExperienceLevel] =
-    useState<ExperienceLevel>('MID_LEVEL');
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>('MID_LEVEL');
   const [location, setLocation] = useState('Jakarta Selatan, DKI Jakarta');
   const [isSalaryDisclosed, setIsSalaryDisclosed] = useState(true);
   const [salaryMin, setSalaryMin] = useState<number>(18000000);
@@ -84,6 +50,23 @@ export const PostJobPage: React.FC<PostJobPageProps> = React.memo(({
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [isFeatured, setIsFeatured] = useState(false);
+
+  // Memuat data perusahaan real dari backend
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const liveCompanies = await companyService.getCompanies();
+        if (liveCompanies && liveCompanies.length > 0) {
+          setCompanies(liveCompanies);
+          setSelectedCompanyId(liveCompanies[0].id);
+        }
+      } catch (err) {
+        console.warn('Gagal memuat perusahaan untuk form posting:', err);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   // Daftar Dinamis Persyaratan & Fasilitas
   const [requirements, setRequirements] = useState<string[]>([
@@ -104,8 +87,15 @@ export const PostJobPage: React.FC<PostJobPageProps> = React.memo(({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedCompany: Company =
-    DUMMY_COMPANIES.find((c) => c.id === selectedCompanyId) ||
-    DUMMY_COMPANIES[0];
+    companies.find((c) => c.id === selectedCompanyId) || {
+      id: selectedCompanyId || 'comp-default',
+      name: 'Perusahaan Saya',
+      industry: 'Teknologi',
+      location: location,
+      logoUrl: '',
+      website: '',
+      description: '',
+    };
 
   // Handler Tambah/Hapus Persyaratan
   const handleAddRequirement = () => {
@@ -251,30 +241,39 @@ export const PostJobPage: React.FC<PostJobPageProps> = React.memo(({
                     onChange={(e) => setSelectedCompanyId(e.target.value)}
                     className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
                   >
-                    {DUMMY_COMPANIES.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.industry})
-                      </option>
-                    ))}
+                    {companies.length > 0 ? (
+                      companies.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.industry})
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">Memuat perusahaan...</option>
+                    )}
                   </select>
                 </div>
 
                 <div>
                   <label htmlFor="job-category" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Kategori Industri Pekerjaan
+                    Kategori Industri Pekerjaan <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <input
                     id="job-category"
+                    type="text"
+                    list="category-suggestions"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
-                  >
-                    {CATEGORIES_LIST.map((cat) => (
-                      <option key={cat.name} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Contoh: Software Engineering, Marketing..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
+                  />
+                  <datalist id="category-suggestions">
+                    <option value="Software Engineering" />
+                    <option value="Product Management" />
+                    <option value="DevOps & Cloud" />
+                    <option value="Design & Creative" />
+                    <option value="Data & Analytics" />
+                    <option value="Banking & Finance" />
+                  </datalist>
                 </div>
               </div>
 
@@ -290,7 +289,7 @@ export const PostJobPage: React.FC<PostJobPageProps> = React.memo(({
                     onChange={(e) => setJobType(e.target.value as JobType)}
                     className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
                   >
-                    {JOB_TYPE_SELECT_OPTIONS.map((opt) => (
+                    {JOB_TYPE_OPTIONS.filter((o) => o.value !== '').map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
@@ -308,7 +307,7 @@ export const PostJobPage: React.FC<PostJobPageProps> = React.memo(({
                     onChange={(e) => setExperienceLevel(e.target.value as ExperienceLevel)}
                     className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
                   >
-                    {EXPERIENCE_LEVEL_SELECT_OPTIONS.map((opt) => (
+                    {EXPERIENCE_LEVEL_OPTIONS.filter((o) => o.value !== '').map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>

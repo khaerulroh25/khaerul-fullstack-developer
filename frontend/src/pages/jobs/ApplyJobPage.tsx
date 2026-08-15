@@ -33,16 +33,9 @@ interface ApplyJobPageProps {
   /** Callback untuk kembali ke halaman sebelumnya / detail lowongan */
   onNavigateBack: () => void;
   /** Callback untuk memproses pengiriman data lamaran */
-  onSubmitApplication: (appData: Omit<Application, 'id' | 'createdAt' | 'logs'>) => boolean;
+  onSubmitApplication: (appData: Omit<Application, 'id' | 'createdAt' | 'logs'>) => boolean | Promise<boolean>;
 }
 
-/**
- * Komponen Halaman Pengajuan Lamaran Pekerjaan (ApplyJobPage)
- *
- * Menyediakan alur wizard bertahap (3-step stepper) untuk pengisian data diri,
- * kualifikasi/resume, dan ringkasan konfirmasi sebelum submit.
- * Dioptimalkan dengan React.memo, integrasi formatter, dan styling Tailwind CSS responsif.
- */
 export const ApplyJobPage: React.FC<ApplyJobPageProps> = React.memo(({
   job,
   currentUser,
@@ -51,16 +44,16 @@ export const ApplyJobPage: React.FC<ApplyJobPageProps> = React.memo(({
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // State Formulir Lamaran (Pre-filled dengan profil pengguna aktif atau default demo)
+  // State Formulir Lamaran (Pre-filled dengan profil pengguna aktif)
   const [formData, setFormData] = useState({
-    applicantName: currentUser?.fullName || 'Ahmad Farhan Pratama',
-    applicantEmail: currentUser?.email || 'pelamar@indokerja.id',
-    applicantPhone: currentUser?.phone || '085712345678',
-    linkedinUrl: currentUser?.linkedinUrl || 'https://linkedin.com/in/farhan-pratama-dev',
-    portfolioUrl: currentUser?.portfolioUrl || 'https://farhanpratama.dev',
-    resumeUrl: currentUser?.resumeUrl || 'https://farhanpratama.dev/resume-ahmad-farhan.pdf',
+    applicantName: currentUser?.fullName || '',
+    applicantEmail: currentUser?.email || '',
+    applicantPhone: currentUser?.phone || '',
+    linkedinUrl: currentUser?.linkedinUrl || '',
+    portfolioUrl: currentUser?.portfolioUrl || '',
+    resumeUrl: currentUser?.resumeUrl || '',
     coverLetter: '',
-    expectedSalary: currentUser?.expectedSalary || 25000000,
+    expectedSalary: currentUser?.expectedSalary || 15000000,
     noticePeriod: '1 Bulan (30 Hari)',
   });
 
@@ -145,12 +138,14 @@ export const ApplyJobPage: React.FC<ApplyJobPageProps> = React.memo(({
   };
 
   // Handler pengajuan berkas lamaran
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!job) return;
+
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const success = onSubmitApplication({
+    try {
+      const success = await onSubmitApplication({
         jobId: job.id,
         job,
         applicantName: formData.applicantName.trim(),
@@ -165,11 +160,12 @@ export const ApplyJobPage: React.FC<ApplyJobPageProps> = React.memo(({
         status: 'Applied',
       });
 
-      setIsSubmitting(false);
       if (success) {
         onNavigateBack();
       }
-    }, 400);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
