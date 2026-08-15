@@ -49,6 +49,7 @@ export type PageRoute =
 export const App: React.FC = () => {
   // State Navigasi Halaman
   const [currentPage, setCurrentPage] = useState<PageRoute>("LANDING");
+  const [redirectAfterLogin, setRedirectAfterLogin] = useState<PageRoute | null>(null);
 
   // Custom Hooks untuk Domain Logika Bisnis
   const { currentUser, login, logout } = useAuth();
@@ -94,31 +95,42 @@ export const App: React.FC = () => {
   const handleLoginSuccess = useCallback(
     (user: AuthUser) => {
       login(user);
-      navigateTo("LANDING");
+      const targetPage =
+        redirectAfterLogin && user.role === "JOB_SEEKER"
+          ? redirectAfterLogin
+          : "LANDING";
+      setRedirectAfterLogin(null);
+      navigateTo(targetPage);
       addToast(
         "success",
         "Login Berhasil",
         `Selamat datang kembali, ${user.fullName}.`,
       );
     },
-    [login, navigateTo, addToast],
+    [login, redirectAfterLogin, navigateTo, addToast],
   );
 
   const handleRegisterSuccess = useCallback(
     (user: AuthUser) => {
       login(user);
-      navigateTo("LANDING");
+      const targetPage =
+        redirectAfterLogin && user.role === "JOB_SEEKER"
+          ? redirectAfterLogin
+          : "LANDING";
+      setRedirectAfterLogin(null);
+      navigateTo(targetPage);
       addToast(
         "success",
         "Pendaftaran Berhasil",
         `Akun Anda (${user.fullName}) berhasil dibuat.`,
       );
     },
-    [login, navigateTo, addToast],
+    [login, redirectAfterLogin, navigateTo, addToast],
   );
 
   const handleLogout = useCallback(() => {
     logout();
+    setRedirectAfterLogin(null);
     navigateTo("LANDING");
     addToast("info", "Anda Telah Keluar", "Sesi login telah berakhir.");
   }, [logout, navigateTo, addToast]);
@@ -135,9 +147,30 @@ export const App: React.FC = () => {
   const handleNavigateToApply = useCallback(
     (job: Job) => {
       setSelectedJob(job);
+
+      if (!currentUser) {
+        setRedirectAfterLogin("APPLY_JOB");
+        addToast(
+          "info",
+          "Silakan Masuk Terlebih Dahulu",
+          "Anda perlu login sebagai Pencari Kerja untuk mengajukan lamaran.",
+        );
+        navigateTo("LOGIN");
+        return;
+      }
+
+      if (currentUser.role === "RECRUITER") {
+        addToast(
+          "error",
+          "Akses Dibatasi",
+          "Akun Perekrut (HR) tidak dapat mengajukan lamaran pekerjaan.",
+        );
+        return;
+      }
+
       navigateTo("APPLY_JOB");
     },
-    [setSelectedJob, navigateTo],
+    [currentUser, setSelectedJob, navigateTo, addToast],
   );
 
   const handleCreateJob = useCallback(
