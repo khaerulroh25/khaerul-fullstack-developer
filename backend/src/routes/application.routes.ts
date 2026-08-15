@@ -13,10 +13,11 @@ import { Role } from '@prisma/client';
 
 const router = Router();
 
-// Mengirim lamaran (bisa anonim atau pencari kerja yang login)
+// Mengirim lamaran (Hanya Pencari Kerja yang terautentikasi)
 router.post(
   '/',
-  optionalAuth,
+  authenticateToken,
+  authorizeRoles(Role.JOB_SEEKER),
   validate({ body: createApplicationSchema }),
   ApplicationController.submitApplication
 );
