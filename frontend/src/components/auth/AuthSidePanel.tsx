@@ -25,7 +25,7 @@ export const AuthSidePanel: React.FC<AuthSidePanelProps> = React.memo(({
   title,
   description,
   features,
-  securityNote = 'Sesi terenkripsi aman dengan standar JWT Authentication & Bcrypt Hashing.',
+  securityNote = 'Data akun dan privasi Anda terjamin aman dengan perlindungan enkripsi standar industri.',
   onNavigateToHome,
 }) => {
   return (
@@ -44,8 +44,8 @@ export const AuthSidePanel: React.FC<AuthSidePanelProps> = React.memo(({
           </div>
           <div>
             <div className="flex items-center leading-none">
-              <span className="text-xl font-black tracking-tight text-white">yuk</span>
-              <span className="text-xl font-black tracking-tight text-amber-400">Kerja</span>
+              <span className="text-xl font-black text-white tracking-tight">yuk</span>
+              <span className="text-xl font-black text-amber-400 tracking-tight">Kerja</span>
             </div>
             <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
               Portal Karier Indonesia
