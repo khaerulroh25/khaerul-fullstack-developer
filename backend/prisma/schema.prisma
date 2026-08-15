@@ -10,7 +10,6 @@ generator client {
 enum Role {
   JOB_SEEKER
   RECRUITER
-  ADMIN
 }
 
 enum JobType {
