@@ -1,19 +1,19 @@
 import React from 'react';
-import { ShieldCheck, Heart, Sparkles } from 'lucide-react';
+import { ShieldCheck, Mail, MapPin } from 'lucide-react';
 
 /**
  * Komponen Footer Aplikasi (Global Footer)
  *
  * Menampilkan ringkasan identitas brand, tautan navigasi pencari kerja & recruiter,
- * informasi arsitektur teknologi, serta hak cipta platform.
- * Dioptimalkan dengan React.memo dan styling murni Tailwind CSS responsif.
+ * informasi kontak bantuan, serta hak cipta platform.
+ * Dioptimalkan dengan React.memo dan styling Tailwind CSS responsif.
  */
 export const Footer: React.FC = React.memo(() => {
   return (
     <footer className="border-t border-slate-800 bg-slate-950 pt-16 pb-8 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Grid Informasi Footer */}
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5 pb-12">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4 pb-12">
           {/* Kolom Profil & Identitas Brand */}
           <div className="lg:col-span-2">
             <div className="mb-4 flex items-center gap-3">
@@ -32,11 +32,11 @@ export const Footer: React.FC = React.memo(() => {
             </div>
 
             <p className="max-w-sm text-xs sm:text-sm leading-relaxed text-slate-400">
-              Platform simulasi dan ekosistem rekrutmen digital terdepan di Indonesia. Menghubungkan talenta unggul dengan perusahaan terkemuka secara transparan dan real-time.
+              Platform ekosistem rekrutmen digital terdepan di Indonesia. Menghubungkan talenta unggul dengan perusahaan terkemuka secara transparan, aman, dan real-time.
             </p>
 
             <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-slate-400">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
               <span>Lowongan Terverifikasi & Bebas Penipuan</span>
             </div>
           </div>
@@ -70,72 +70,39 @@ export const Footer: React.FC = React.memo(() => {
             </ul>
           </div>
 
-          {/* Kolom Navigasi Recruiter & HR */}
+          {/* Kolom Kontak & Bantuan */}
           <div>
             <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-white">
-              Perusahaan & HR
+              Bantuan & Layanan
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-400">
+              <li className="flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <a href="mailto:support@yukkerja.id" className="transition hover:text-amber-400">
+                  support@yukkerja.id
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <span>Jakarta Selatan, DKI Jakarta</span>
+              </li>
               <li>
-                <span className="cursor-pointer transition hover:text-amber-400">
-                  Pasang Lowongan Baru
+                <span className="transition hover:text-amber-400 cursor-pointer">
+                  Kebijakan Privasi
                 </span>
               </li>
               <li>
-                <span className="cursor-pointer transition hover:text-amber-400">
-                  Applicant Tracking System (ATS)
+                <span className="transition hover:text-amber-400 cursor-pointer">
+                  Syarat & Ketentuan
                 </span>
-              </li>
-              <li>
-                <span className="cursor-pointer transition hover:text-amber-400">
-                  Manajemen Pipeline Kandidat
-                </span>
-              </li>
-              <li>
-                <span className="cursor-pointer transition hover:text-amber-400">
-                  Solusi Hiring Enterprise
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Kolom Standar Rekayasa Perangkat Lunak */}
-          <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-white">
-              Teknologi Platform
-            </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
-              <li className="flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-amber-400" />
-                <span>React 19 + TypeScript</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-amber-400" />
-                <span>Tailwind CSS Utility Engine</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-amber-400" />
-                <span>Node.js + Clean Architecture</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-amber-400" />
-                <span>PostgreSQL + Prisma ORM</span>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Garis Pembatas & Baris Hak Cipta Bawah */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80 pt-8 text-xs text-slate-500">
-          <div>
-            © 2026 <strong className="text-slate-400">yukKerja.id</strong>. Seluruh hak cipta dilindungi undang-undang.
-          </div>
-
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span>Dibuat dengan dedikasi</span>
-            <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500 inline" />
-            <span>untuk talenta Indonesia</span>
-          </div>
+        <div className="border-t border-slate-800/80 pt-8 text-center text-xs text-slate-500">
+          <p>© 2026 <strong className="text-slate-400">yukKerja.id</strong>. Seluruh hak cipta dilindungi undang-undang.</p>
         </div>
       </div>
     </footer>
