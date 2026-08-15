@@ -1,6 +1,6 @@
-# Dokumentasi API — IndoKerja.id (yukKerja)
+# Dokumentasi API — YukKerja
 
-Dokumentasi RESTful API untuk platform rekrutmen digital **IndoKerja.id (yukKerja)**. Seluruh contoh request dan response di bawah ini menggunakan data nyata hasil seeder database PostgreSQL (`backend/src/seed/seedData.ts`).
+Dokumentasi RESTful API untuk platform rekrutmen digital **YukKerja**. Seluruh contoh request dan response di bawah ini menggunakan data nyata hasil seeder database PostgreSQL (`backend/src/seed/seedData.ts`).
 
 ---
 
@@ -21,11 +21,11 @@ Authorization: Bearer <JWT_TOKEN>
 
 | Peran (`Role`) | Email | Password | Nama Lengkap / Entitas |
 | :--- | :--- | :--- | :--- |
-| `JOB_SEEKER` | `pelamar@indokerja.id` | `Password123!` | Khaerul Anam (Pencari Kerja Utama) |
+| `JOB_SEEKER` | `pelamar@yukkerja.id` | `Password123!` | Khaerul Anam (Pencari Kerja Utama) |
 | `JOB_SEEKER` | `ahmad.rizki@gmail.com` | `Password123!` | Ahmad Rizki Nugraha (Pencari Kerja) |
-| `RECRUITER` | `recruiter.goto@indokerja.id` | `Password123!` | Budi Raharja (Talent Acquisition GoTo) |
-| `RECRUITER` | `recruiter.traveloka@indokerja.id` | `Password123!` | Citra Dewi (People Operations Traveloka) |
-| `RECRUITER` | `recruiter.mandiri@indokerja.id` | `Password123!` | Agus Pratama (IT HR Bank Mandiri) |
+| `RECRUITER` | `recruiter.goto@yukkerja.id` | `Password123!` | Budi Raharja (Talent Acquisition GoTo) |
+| `RECRUITER` | `recruiter.traveloka@yukkerja.id` | `Password123!` | Citra Dewi (People Operations Traveloka) |
+| `RECRUITER` | `recruiter.mandiri@yukkerja.id` | `Password123!` | Agus Pratama (IT HR Bank Mandiri) |
 
 ---
 
@@ -38,7 +38,7 @@ Authorization: Bearer <JWT_TOKEN>
 - **Request Body (Contoh Login Pencari Kerja)**:
 ```json
 {
-  "email": "pelamar@indokerja.id",
+  "email": "pelamar@yukkerja.id",
   "password": "Password123!"
 }
 ```
@@ -50,7 +50,7 @@ Authorization: Bearer <JWT_TOKEN>
   "data": {
     "user": {
       "id": "c1a2b3c4-5678-90ab-cdef-111111111111",
-      "email": "pelamar@indokerja.id",
+      "email": "pelamar@yukkerja.id",
       "fullName": "Khaerul Anam",
       "role": "JOB_SEEKER",
       "phone": "085712345678",
@@ -107,7 +107,7 @@ Authorization: Bearer <JWT_TOKEN>
   "success": true,
   "data": {
     "id": "c1a2b3c4-5678-90ab-cdef-111111111111",
-    "email": "pelamar@indokerja.id",
+    "email": "pelamar@yukkerja.id",
     "fullName": "Khaerul Anam",
     "role": "JOB_SEEKER",
     "phone": "085712345678",
@@ -309,11 +309,11 @@ Mengambil seluruh perusahaan mitra seeder beserta kalkulasi lowongan aktifnya.
 {
   "jobId": "b4c5d6e7-f8a9-0123-4567-89abcdef0123",
   "applicantName": "Khaerul Anam",
-  "applicantEmail": "pelamar@indokerja.id",
+  "applicantEmail": "pelamar@yukkerja.id",
   "applicantPhone": "085712345678",
   "linkedinUrl": "https://linkedin.com/in/khaerul-anam",
   "portfolioUrl": "https://khaerul.dev",
-  "resumeUrl": "https://storage.indokerja.id/resumes/khaerul-anam-cv.pdf",
+  "resumeUrl": "https://storage.yukkerja.id/resumes/khaerul-anam-cv.pdf",
   "coverLetter": "Tertarik bergabung memimpin pengembangan frontend & backend TypeScript di GoTo.",
   "expectedSalary": 28000000,
   "noticePeriod": "Immediately"
@@ -347,9 +347,9 @@ Mengambil seluruh perusahaan mitra seeder beserta kalkulasi lowongan aktifnya.
     {
       "id": "9721cb37-81b2-4790-9bc5-61786651f436",
       "applicantName": "Khaerul Anam",
-      "applicantEmail": "pelamar@indokerja.id",
+      "applicantEmail": "pelamar@yukkerja.id",
       "applicantPhone": "085712345678",
-      "resumeUrl": "https://storage.indokerja.id/resumes/khaerul-anam-cv.pdf",
+      "resumeUrl": "https://storage.yukkerja.id/resumes/khaerul-anam-cv.pdf",
       "expectedSalary": 28000000,
       "status": "INTERVIEW",
       "recruiterNotes": "Kandidat memiliki rekam jejak solid di stack TypeScript & React. Diundang ke tahap User Interview.",
