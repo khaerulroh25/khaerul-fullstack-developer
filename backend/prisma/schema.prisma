@@ -1,0 +1,150 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  JOB_SEEKER
+  RECRUITER
+  ADMIN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+  HYBRID
+}
+
+enum ExperienceLevel {
+  ENTRY_LEVEL
+  JUNIOR
+  MID_LEVEL
+  SENIOR
+  LEAD
+}
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  SCREENING
+  INTERVIEW
+  OFFERED
+  REJECTED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  fullName     String        @map("full_name")
+  role         Role          @default(JOB_SEEKER)
+  phone        String?
+  avatarUrl    String?       @map("avatar_url")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  companies    Company[]
+  applications Application[]
+
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  name        String
+  industry    String
+  location    String
+  logoUrl     String?  @map("logo_url")
+  website     String?
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  jobs        Job[]
+
+  @@map("companies")
+}
+
+model Job {
+  id                String          @id @default(uuid())
+  companyId         String          @map("company_id")
+  title             String
+  category          String
+  jobType           JobType         @default(FULL_TIME) @map("job_type")
+  experienceLevel   ExperienceLevel @default(MID_LEVEL) @map("experience_level")
+  location          String
+  salaryMin         Int?            @map("salary_min")
+  salaryMax         Int?            @map("salary_max")
+  isSalaryDisclosed Boolean         @default(true) @map("is_salary_disclosed")
+  description       String          @db.Text
+  requirements      String[]
+  benefits          String[]
+  status            JobStatus       @default(ACTIVE)
+  deadline          DateTime?
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications      Application[]
+
+  @@index([category])
+  @@index([location])
+  @@index([status])
+  @@map("jobs")
+}
+
+model Application {
+  id             String            @id @default(uuid())
+  jobId          String            @map("job_id")
+  userId         String?           @map("user_id")
+  applicantName  String            @map("applicant_name")
+  applicantEmail String            @map("applicant_email")
+  applicantPhone String            @map("applicant_phone")
+  linkedinUrl    String?           @map("linkedin_url")
+  portfolioUrl   String?           @map("portfolio_url")
+  resumeUrl      String            @map("resume_url")
+  coverLetter    String?           @db.Text @map("cover_letter")
+  expectedSalary Int?              @map("expected_salary")
+  noticePeriod   String?           @map("notice_period")
+  status         ApplicationStatus @default(SUBMITTED)
+  recruiterNotes String?           @db.Text @map("recruiter_notes")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  job            Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  logs           ApplicationLog[]
+
+  @@unique([jobId, applicantEmail], name: "unique_job_applicant")
+  @@index([applicantEmail])
+  @@index([status])
+  @@map("applications")
+}
+
+model ApplicationLog {
+  id             String            @id @default(uuid())
+  applicationId  String            @map("application_id")
+  previousStatus ApplicationStatus @map("previous_status")
+  newStatus      ApplicationStatus @map("new_status")
+  changedBy      String            @default("RECRUITER") @map("changed_by")
+  comment        String?           @db.Text
+  timestamp      DateTime          @default(now())
+
+  application    Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_logs")
+}
