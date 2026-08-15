@@ -123,7 +123,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
         }
         description="Daftarkan diri Anda dalam 2 menit dan dapatkan akses prioritas ke ribuan peluang kerja di perusahaan terdepan Indonesia."
         features={REGISTER_FEATURES}
-        securityNote="Seluruh lowongan telah melalui proses kurasi dan verifikasi legalitas perusahaan."
         onNavigateToHome={onNavigateToHome}
       />
 
@@ -229,6 +228,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = React.memo(({
                 </button>
               </div>
             </div>
+
             <div>
               <label htmlFor="reg-fullname" className="mb-1.5 block text-xs font-semibold text-slate-300">
                 Nama Lengkap
