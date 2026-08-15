@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Code,
   Briefcase,
@@ -8,6 +8,7 @@ import {
   CreditCard,
   Layers,
   ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import type { DynamicCategory } from '../../hooks/useJobFilters.js';
 
@@ -19,7 +20,7 @@ interface CategorySectionProps {
   selectedCategory: string;
   /** Callback untuk memilih atau membatalkan pilihan kategori */
   onSelectCategory: (category: string) => void;
-  /** Daftar kategori 100% dinamis dari database */
+  /** Daftar kategori dinamis dari database */
   categories: DynamicCategory[];
 }
 
@@ -51,14 +52,24 @@ const renderCategoryIcon = (categoryName: string) => {
 
 /**
  * Komponen Seksi Eksplorasi Kategori Industri
- * Menampilkan kartu kategori yang 100% diekstrak dinamis dari data database PostgreSQL
+ * Menampilkan 4 Kategori Teratas dengan jumlah lowongan terbanyak di platform
  */
 export const CategorySection: React.FC<CategorySectionProps> = React.memo(({
   selectedCategory,
   onSelectCategory,
   categories,
 }) => {
-  if (!categories || categories.length === 0) {
+  // Ambil hanya Top 4 kategori dengan jumlah lowongan terbanyak
+  const topCategories = useMemo(() => {
+    if (!categories || categories.length === 0) {
+      return [];
+    }
+    // Filter kategori yang memiliki lowongan dan ambil 4 teratas
+    const filtered = categories.filter((c) => c.count > 0);
+    return (filtered.length > 0 ? filtered : categories).slice(0, 4);
+  }, [categories]);
+
+  if (topCategories.length === 0) {
     return null;
   }
 
@@ -69,24 +80,24 @@ export const CategorySection: React.FC<CategorySectionProps> = React.memo(({
         <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-amber-500" />
+              <Sparkles className="h-4 w-4 text-amber-500" />
               <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                Eksplorasi Industri
+                Paling Banyak Dicari
               </span>
             </div>
             <h2 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-              Kategori Lowongan Tersedia
+              Kategori Terpopuler Saat Ini
             </h2>
           </div>
 
           <p className="max-w-md text-xs sm:text-sm text-slate-500">
-            Temukan lowongan yang sesuai dengan bidang dan spesialisasi karier Anda.
+            Kategori pekerjaan dengan peluang karier dan jumlah lowongan aktif terbanyak.
           </p>
         </div>
 
-        {/* Grid Kartu Kategori Dinamis */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map((cat) => {
+        {/* Grid Kartu Kategori Teratas (Top 4) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {topCategories.map((cat) => {
             const isSelected = selectedCategory === cat.name;
 
             return (
@@ -94,15 +105,15 @@ export const CategorySection: React.FC<CategorySectionProps> = React.memo(({
                 key={cat.name}
                 type="button"
                 onClick={() => onSelectCategory(cat.name)}
-                className={`flex flex-col justify-between rounded-2xl p-5 text-left transition-all duration-200 hover:-translate-y-1 active:scale-95 ${
+                className={`group flex items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200 hover:-translate-y-1 active:scale-95 ${
                   isSelected
-                    ? 'border-2 border-amber-400 bg-slate-950 text-white shadow-lg'
+                    ? 'border-2 border-amber-400 bg-slate-950 text-white shadow-lg ring-2 ring-amber-400/20'
                     : 'border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-amber-300 hover:shadow-md'
                 }`}
               >
                 {/* Ikon Kategori */}
                 <div
-                  className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors ${
                     isSelected
                       ? 'bg-amber-400 text-slate-950'
                       : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'
@@ -112,17 +123,17 @@ export const CategorySection: React.FC<CategorySectionProps> = React.memo(({
                 </div>
 
                 {/* Judul & Total Lowongan */}
-                <div>
-                  <h4 className={`text-sm font-bold leading-snug ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                <div className="min-w-0 flex-1">
+                  <h4 className={`truncate text-sm font-bold leading-snug ${isSelected ? 'text-white' : 'text-slate-900'}`}>
                     {cat.name}
                   </h4>
                   <div
-                    className={`mt-1 flex items-center gap-1 text-xs font-medium ${
+                    className={`mt-1 flex items-center gap-1 text-xs font-semibold ${
                       isSelected ? 'text-amber-300' : 'text-slate-500'
                     }`}
                   >
-                    <span>{cat.count} Lowongan</span>
-                    <ArrowRight className="h-3 w-3" />
+                    <span>{cat.count} Lowongan Aktif</span>
+                    <ArrowRight className="h-3 w-3 opacity-70 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </button>

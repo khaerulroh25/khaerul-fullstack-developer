@@ -70,19 +70,22 @@ export const useJobFilters = (jobs: Job[]) => {
     }
   }, []);
 
-  // Ekstraksi kategori 100% dinamis dan jumlah lowongan aktif secara real-time dari database
+  // Ekstraksi kategori dan pengurutan berdasarkan jumlah lowongan terbanyak (descending)
   const availableCategories: DynamicCategory[] = useMemo(() => {
     const countsMap = new Map<string, number>();
+
+    // Hitung frekuensi per kategori dari seluruh lowongan aktif
     jobs.forEach((job) => {
       if (job.category && (job.status === 'ACTIVE' || !job.status)) {
-        const trimmed = job.category.trim();
-        countsMap.set(trimmed, (countsMap.get(trimmed) || 0) + 1);
+        const catName = job.category.trim();
+        countsMap.set(catName, (countsMap.get(catName) || 0) + 1);
       }
     });
-    return Array.from(countsMap.entries()).map(([name, count]) => ({
-      name,
-      count,
-    }));
+
+    // Urutkan berdasarkan lowongan terbanyak
+    return Array.from(countsMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
   }, [jobs]);
 
   // Evaluasi subset lowongan kerja terfilter berbasis useMemo
