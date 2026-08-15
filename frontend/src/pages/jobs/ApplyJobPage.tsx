@@ -157,7 +157,7 @@ export const ApplyJobPage: React.FC<ApplyJobPageProps> = React.memo(({
         coverLetter: formData.coverLetter.trim(),
         expectedSalary: Number(formData.expectedSalary),
         noticePeriod: formData.noticePeriod,
-        status: 'Applied',
+        status: 'SUBMITTED',
       });
 
       if (success) {

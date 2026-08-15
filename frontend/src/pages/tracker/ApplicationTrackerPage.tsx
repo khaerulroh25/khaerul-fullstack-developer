@@ -10,16 +10,16 @@ import {
   X,
 } from 'lucide-react';
 import type { Application, ApplicationStatus, Job } from '../../types/index.js';
-import { formatDateID } from '../../utils/formatters.js';
+import { formatDateID, getApplicationStatusLabel } from '../../utils/formatters.js';
 
 /**
- * Tahapan runtutan status seleksi pelamar
+ * Tahapan runtutan status seleksi pelamar sesuai Enum Database Prisma
  */
 const TRACKER_STEPS: ApplicationStatus[] = [
-  'Applied',
-  'Reviewing',
-  'Shortlisted',
-  'Accepted',
+  'SUBMITTED',
+  'SCREENING',
+  'INTERVIEW',
+  'OFFERED',
 ];
 
 /**
@@ -27,11 +27,11 @@ const TRACKER_STEPS: ApplicationStatus[] = [
  */
 const TRACKER_STATUS_TABS = [
   { id: 'ALL', label: 'Semua' },
-  { id: 'Applied', label: 'Applied' },
-  { id: 'Reviewing', label: 'Reviewing' },
-  { id: 'Shortlisted', label: 'Shortlisted' },
-  { id: 'Accepted', label: 'Accepted' },
-  { id: 'Rejected', label: 'Rejected' },
+  { id: 'SUBMITTED', label: 'Applied' },
+  { id: 'SCREENING', label: 'Screening' },
+  { id: 'INTERVIEW', label: 'Interview' },
+  { id: 'OFFERED', label: 'Offered' },
+  { id: 'REJECTED', label: 'Rejected' },
 ] as const;
 
 /**
@@ -79,31 +79,31 @@ export const ApplicationTrackerPage: React.FC<ApplicationTrackerPageProps> = Rea
   // Helper Badge Visual Status
   const renderStatusBadge = (status: ApplicationStatus) => {
     switch (status) {
-      case 'Applied':
+      case 'SUBMITTED':
         return (
           <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700">
             Applied
           </span>
         );
-      case 'Reviewing':
+      case 'SCREENING':
         return (
           <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-            Reviewing
+            Screening
           </span>
         );
-      case 'Shortlisted':
+      case 'INTERVIEW':
         return (
           <span className="rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-bold text-purple-800">
-            Shortlisted
+            Interview
           </span>
         );
-      case 'Accepted':
+      case 'OFFERED':
         return (
           <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-            Accepted
+            Offered / Accepted
           </span>
         );
-      case 'Rejected':
+      case 'REJECTED':
         return (
           <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700">
             Rejected
@@ -120,7 +120,7 @@ export const ApplicationTrackerPage: React.FC<ApplicationTrackerPageProps> = Rea
 
   // Helper Komponen Timeline Progresif Pelamar
   const renderTimelineSteps = (currentStatus: ApplicationStatus) => {
-    const isRejected = currentStatus === 'Rejected';
+    const isRejected = currentStatus === 'REJECTED';
     const currentIndex = TRACKER_STEPS.indexOf(currentStatus);
 
     return (
@@ -150,7 +150,7 @@ export const ApplicationTrackerPage: React.FC<ApplicationTrackerPageProps> = Rea
                       : 'font-medium text-slate-500'
                   }`}
                 >
-                  {step.toLowerCase()}
+                  {getApplicationStatusLabel(step)}
                 </span>
               </div>
 

@@ -12,20 +12,21 @@ import {
   Eye,
   Send,
   X,
+  Loader2,
 } from 'lucide-react';
 import type { Application, ApplicationStatus, Job } from '../../types/index.js';
 import { formatDateID, formatSalary } from '../../utils/formatters.js';
 
 /**
- * Daftar tab navigasi status seleksi pelamar
+ * Daftar tab navigasi status seleksi pelamar sesuai Enum Database Prisma
  */
 const STATUS_TABS = [
   { id: 'ALL', label: 'Semua Pelamar' },
-  { id: 'Applied', label: 'Applied' },
-  { id: 'Reviewing', label: 'Reviewing' },
-  { id: 'Shortlisted', label: 'Shortlisted' },
-  { id: 'Accepted', label: 'Accepted' },
-  { id: 'Rejected', label: 'Rejected' },
+  { id: 'SUBMITTED', label: 'Applied' },
+  { id: 'SCREENING', label: 'Screening' },
+  { id: 'INTERVIEW', label: 'Interview' },
+  { id: 'OFFERED', label: 'Offered' },
+  { id: 'REJECTED', label: 'Rejected' },
 ] as const;
 
 /**
@@ -45,16 +46,11 @@ interface RecruiterApplicantsPageProps {
     applicationId: string,
     newStatus: ApplicationStatus,
     recruiterNotes?: string
-  ) => void;
+  ) => Promise<boolean> | boolean | void;
 }
 
 /**
  * Komponen Halaman Manajemen Pelamar & ATS (RecruiterApplicantsPage)
- *
- * Menyediakan dashboard pelacakan kandidat (Applicant Tracking System), metrik status lamaran,
- * filter multi-kriteria (lowongan, status tahapan, pencarian pelamar), serta modal interaktif
- * untuk memperbarui status seleksi dan catatan feedback HR.
- * Dioptimalkan dengan React.memo, komputasi metrik berbasis useMemo, dan styling Tailwind CSS responsif.
  */
 export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = React.memo(({
   jobs,
@@ -70,17 +66,18 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
   // State Modal Pembaharuan Status & Catatan HR
   const [activeAppForNotes, setActiveAppForNotes] = useState<Application | null>(null);
   const [tempNotes, setTempNotes] = useState('');
-  const [tempStatus, setTempStatus] = useState<ApplicationStatus>('Reviewing');
+  const [tempStatus, setTempStatus] = useState<ApplicationStatus>('SCREENING');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Komputasi Metrik Statistik Pelamar (Memoized)
   const metrics = useMemo(() => {
     const total = applications.length;
-    const applied = applications.filter((a) => a.status === 'Applied').length;
-    const reviewing = applications.filter((a) => a.status === 'Reviewing').length;
-    const shortlisted = applications.filter((a) => a.status === 'Shortlisted').length;
-    const accepted = applications.filter((a) => a.status === 'Accepted').length;
+    const submitted = applications.filter((a) => a.status === 'SUBMITTED').length;
+    const screening = applications.filter((a) => a.status === 'SCREENING').length;
+    const interview = applications.filter((a) => a.status === 'INTERVIEW').length;
+    const offered = applications.filter((a) => a.status === 'OFFERED').length;
 
-    return { total, applied, reviewing, shortlisted, accepted };
+    return { total, submitted, screening, interview, offered };
   }, [applications]);
 
   // Komputasi Daftar Pelamar Terfilter (Memoized)
@@ -109,31 +106,31 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
   // Helper Lencana Status Visual
   const renderStatusBadge = (status: ApplicationStatus) => {
     switch (status) {
-      case 'Applied':
+      case 'SUBMITTED':
         return (
           <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700">
             Applied
           </span>
         );
-      case 'Reviewing':
+      case 'SCREENING':
         return (
           <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-            Reviewing
+            Screening
           </span>
         );
-      case 'Shortlisted':
+      case 'INTERVIEW':
         return (
           <span className="rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-bold text-purple-800">
-            Shortlisted
+            Interview
           </span>
         );
-      case 'Accepted':
+      case 'OFFERED':
         return (
           <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-            Accepted
+            Offered
           </span>
         );
-      case 'Rejected':
+      case 'REJECTED':
         return (
           <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700">
             Rejected
@@ -156,12 +153,17 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
   };
 
   // Handler Simpan Status & Catatan HR
-  const handleSaveStatusAndNotes = (e: React.FormEvent) => {
+  const handleSaveStatusAndNotes = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeAppForNotes) return;
 
-    onUpdateApplicationStatus(activeAppForNotes.id, tempStatus, tempNotes.trim());
-    setActiveAppForNotes(null);
+    setIsUpdating(true);
+    try {
+      await onUpdateApplicationStatus(activeAppForNotes.id, tempStatus, tempNotes.trim());
+      setActiveAppForNotes(null);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -186,7 +188,7 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
               Manajemen Kandidat & Pelamar Kerja
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-500">
-              Kelola seluruh berkas kandidat yang melamar, tinjau kualifikasi CV, dan berikan feedback tahapan seleksi secara terpusat.
+              Kelola seluruh berkas kandidat yang melamar, tinjau kualifikasi CV, dan perbarui tahapan seleksi secara terpusat.
             </p>
           </div>
 
@@ -210,25 +212,25 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
             <span className="block text-xs font-bold text-blue-600">Applied</span>
-            <div className="mt-1 text-2xl font-black text-blue-600">{metrics.applied}</div>
+            <div className="mt-1 text-2xl font-black text-blue-600">{metrics.submitted}</div>
             <span className="text-[11px] text-slate-400">Berkas baru masuk</span>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-            <span className="block text-xs font-bold text-amber-600">Reviewing</span>
-            <div className="mt-1 text-2xl font-black text-amber-600">{metrics.reviewing}</div>
+            <span className="block text-xs font-bold text-amber-600">Screening</span>
+            <div className="mt-1 text-2xl font-black text-amber-600">{metrics.screening}</div>
             <span className="text-[11px] text-slate-400">Sedang ditinjau</span>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-            <span className="block text-xs font-bold text-purple-600">Shortlisted</span>
-            <div className="mt-1 text-2xl font-black text-purple-600">{metrics.shortlisted}</div>
-            <span className="text-[11px] text-slate-400">Kandidat terpilih</span>
+            <span className="block text-xs font-bold text-purple-600">Interview</span>
+            <div className="mt-1 text-2xl font-black text-purple-600">{metrics.interview}</div>
+            <span className="text-[11px] text-slate-400">Tahap wawancara</span>
           </div>
 
           <div className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-            <span className="block text-xs font-bold text-emerald-600">Accepted</span>
-            <div className="mt-1 text-2xl font-black text-emerald-600">{metrics.accepted}</div>
+            <span className="block text-xs font-bold text-emerald-600">Offered</span>
+            <div className="mt-1 text-2xl font-black text-emerald-600">{metrics.offered}</div>
             <span className="text-[11px] text-slate-400">Kandidat diterima</span>
           </div>
         </div>
@@ -249,22 +251,22 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
               <option value="ALL">Semua Lowongan Pekerjaan ({jobs.length})</option>
               {jobs.map((job) => (
                 <option key={job.id} value={job.id}>
-                  {job.title} ({job.company.name})
+                  {job.title} ({job.company?.name || 'Perusahaan'})
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Input Pencarian Nama / Email Pelamar */}
-          <div className="relative w-full lg:max-w-xs">
+          {/* Input Pencarian Pelamar */}
+          <div className="relative w-full lg:w-72">
             <input
               type="text"
+              placeholder="Cari nama, email, posisi..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama pelamar / email..."
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-8 text-xs font-medium text-slate-900 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
             />
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             {searchQuery && (
               <button
                 type="button"
@@ -277,16 +279,16 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
           </div>
         </div>
 
-        {/* Tab Navigasi Kategori Status */}
+        {/* Tab Filter Status Tahapan */}
         <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-2">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedStatus(tab.id)}
-              className={`rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap transition active:scale-95 ${
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition active:scale-95 ${
                 selectedStatus === tab.id
-                  ? 'bg-slate-950 text-white shadow-sm'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                  ? 'border border-slate-900 bg-slate-900 text-white shadow-sm'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
               }`}
             >
               {tab.label}
@@ -294,130 +296,133 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
           ))}
         </div>
 
-        {/* Daftar Kartu Pelamar */}
+        {/* Daftar Kartu Pelamar / Data Table */}
         {filteredApplicants.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center shadow-sm">
-            <Users className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-            <h3 className="text-base font-extrabold text-slate-900">
-              Belum Ada Pelamar yang Sesuai
+            <Users className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+            <h3 className="text-base font-bold text-slate-900">
+              Tidak Ada Berkas Pelamar
             </h3>
-            <p className="mx-auto mt-1 mb-5 max-w-md text-xs text-slate-500">
-              Tidak ada berkas kandidat yang cocok dengan kriteria filter atau kata kunci pencarian saat ini.
+            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+              {applications.length === 0
+                ? 'Belum ada kandidat yang mengajukan lamaran pada lowongan Anda.'
+                : 'Tidak ada berkas pelamar yang sesuai dengan kriteria filter saat ini.'}
             </p>
-            <button
-              onClick={() => {
-                setSelectedJobId('ALL');
-                setSelectedStatus('ALL');
-                setSearchQuery('');
-              }}
-              className="rounded-xl bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 transition hover:bg-amber-200"
-            >
-              Reset Semua Filter
-            </button>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredApplicants.map((app) => (
               <div
                 key={app.id}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+                className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition hover:border-amber-400 hover:shadow-md"
               >
-                {/* Header Profil Pelamar */}
+                {/* Header Informasi Pelamar & Aksi Cepat */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-200 bg-amber-100 text-base font-black text-amber-800 shadow-sm">
-                      {app.applicantName.charAt(0)}
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-base font-bold text-slate-900">
+                        {app.applicantName}
+                      </h3>
+                      {renderStatusBadge(app.status)}
                     </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <h3 className="text-base font-extrabold text-slate-900">
-                          {app.applicantName}
-                        </h3>
-                        {renderStatusBadge(app.status)}
-                      </div>
 
-                      <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                        <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                          <Briefcase className="h-3.5 w-3.5 text-amber-600" />
-                          <span>Melamar: <strong className="text-slate-900">{app.job.title}</strong></span>
-                        </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{app.applicantEmail}</span>
-                        </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{app.applicantPhone}</span>
-                        </div>
-                      </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="h-3.5 w-3.5 text-slate-400" />
+                        Melamar posisi: <strong className="text-slate-700">{app.job.title}</strong>
+                      </span>
+                      <span>•</span>
+                      <span>Dikirim pada {formatDateID(app.createdAt, true)}</span>
                     </div>
                   </div>
 
-                  {/* Tombol Aksi Recruiter (Buka CV & Ubah Status) */}
-                  <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
-                    <a
-                      href={app.resumeUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-800 transition hover:bg-amber-100 hover:text-amber-900"
-                    >
-                      <Eye className="h-3.5 w-3.5 text-amber-700" />
-                      <span>Buka CV Pelamar</span>
-                      <ExternalLink className="h-3 w-3 text-slate-400" />
-                    </a>
-
+                  <div className="flex items-center gap-2.5">
                     <button
                       onClick={() => handleOpenStatusModal(app)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow-sm transition hover:bg-amber-300 active:scale-95"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 active:scale-95"
                     >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      <span>Ubah Status & Catatan HR</span>
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>Ubah Status & Catatan</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Grid Rincian Metadata Pelamar */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs text-slate-600">
-                  <div>
-                    <span className="mb-0.5 block text-slate-400">Ekspektasi Gaji:</span>
-                    <strong className="text-sm font-bold text-slate-900">
-                      {app.expectedSalary
-                        ? formatSalary(app.expectedSalary, undefined, true, '/ bulan')
-                        : 'Negosiasi'}
-                    </strong>
+                {/* Body Rincian Kontak & Ekspektasi */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4 text-xs">
+                  {/* Kontak & Link Portofolio */}
+                  <div className="space-y-1.5">
+                    <div className="font-semibold text-slate-500">Kontak Pelamar:</div>
+                    <div className="flex items-center gap-1.5 text-slate-800">
+                      <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <a href={`mailto:${app.applicantEmail}`} className="hover:underline">
+                        {app.applicantEmail}
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-800">
+                      <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <span>{app.applicantPhone}</span>
+                    </div>
                   </div>
 
-                  <div>
-                    <span className="mb-0.5 block text-slate-400">Ketersediaan Kerja:</span>
-                    <strong className="font-bold text-slate-900">
-                      {app.noticePeriod || 'Segera (Immediately)'}
-                    </strong>
+                  {/* Berkas Resume & Profil Profesional */}
+                  <div className="space-y-1.5">
+                    <div className="font-semibold text-slate-500">Dokumen & Profil:</div>
+                    <div>
+                      <a
+                        href={app.resumeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-bold text-amber-600 underline hover:text-amber-700"
+                      >
+                        <span>Lihat Dokumen CV (Resume)</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                    {app.linkedinUrl && (
+                      <div>
+                        <a
+                          href={app.linkedinUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-slate-600 hover:text-blue-600"
+                        >
+                          <span>Profil LinkedIn</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <span className="mb-0.5 block text-slate-400">Tanggal Pengajuan:</span>
-                    <strong className="font-bold text-slate-900">
-                      {formatDateID(app.createdAt)}
-                    </strong>
+                  {/* Gaji & Waktu Mulai */}
+                  <div className="space-y-1.5">
+                    <div className="font-semibold text-slate-500">Ekspektasi:</div>
+                    <div className="text-slate-800">
+                      Gaji:{' '}
+                      <strong className="text-slate-900">
+                        {app.expectedSalary ? formatSalary(app.expectedSalary, app.expectedSalary) : 'Nego'}
+                      </strong>
+                    </div>
+                    <div className="text-slate-800">
+                      Notice Period:{' '}
+                      <strong className="text-slate-900">{app.noticePeriod || 'Segera'}</strong>
+                    </div>
                   </div>
                 </div>
 
-                {/* Surat Lamaran Pelamar (Jika Ada) */}
+                {/* Surat Lamaran / Cover Letter */}
                 {app.coverLetter && (
-                  <div className="mt-3.5 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs leading-relaxed text-slate-700">
-                    <strong className="mb-1 block text-slate-900">Pesan dari Pelamar:</strong>
-                    "{app.coverLetter}"
+                  <div className="mb-3 rounded-xl bg-slate-50 p-3.5 text-xs text-slate-700 leading-relaxed border border-slate-100">
+                    <strong className="block font-bold text-slate-900 mb-1">Surat Lamaran:</strong>
+                    <p className="line-clamp-3">{app.coverLetter}</p>
                   </div>
                 )}
 
-                {/* Catatan Feedback HR Terakhir (Jika Ada) */}
+                {/* Catatan HR / Recruiter Notes (Jika Tersedia) */}
                 {app.recruiterNotes && (
-                  <div className="mt-3.5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs leading-relaxed text-amber-900">
+                  <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-900">
                     <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
                     <div>
-                      <strong>Catatan / Undangan HR:</strong> {app.recruiterNotes}
+                      <strong className="font-bold">Catatan Tim HR:</strong> {app.recruiterNotes}
                     </div>
                   </div>
                 )}
@@ -426,27 +431,29 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
           </div>
         )}
 
-        {/* Modal: Ubah Status & Catatan HR */}
+        {/* Modal Interaktif Pembaruan Status & Catatan HR */}
         {activeAppForNotes && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
-              {/* Tombol Tutup Modal */}
-              <button
-                onClick={() => setActiveAppForNotes(null)}
-                className="absolute right-5 top-5 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
-              >
-                <X className="h-4 w-4" />
-              </button>
-
-              <div className="mb-5">
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-800">
-                  Update Tahapan Seleksi
-                </span>
-                <h3 className="mt-1.5 text-xl font-extrabold text-slate-900">
-                  {activeAppForNotes.applicantName}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base font-bold text-slate-900">
+                  Ubah Tahapan Seleksi Pelamar
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Posisi: {activeAppForNotes.job.title}
+                <button
+                  type="button"
+                  onClick={() => setActiveAppForNotes(null)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="mb-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600 border border-slate-100">
+                <p>
+                  Pelamar: <strong className="text-slate-900">{activeAppForNotes.applicantName}</strong>
+                </p>
+                <p className="mt-0.5">
+                  Posisi: <strong className="text-slate-900">{activeAppForNotes.job.title}</strong>
                 </p>
               </div>
 
@@ -461,11 +468,11 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
                     onChange={(e) => setTempStatus(e.target.value as ApplicationStatus)}
                     className="w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-100"
                   >
-                    <option value="Applied">Applied (Berkas Masuk)</option>
-                    <option value="Reviewing">Reviewing (Sedang Ditinjau)</option>
-                    <option value="Shortlisted">Shortlisted (Kandidat Terpilih)</option>
-                    <option value="Accepted">Accepted (Diterima)</option>
-                    <option value="Rejected">Rejected (Belum Lolos)</option>
+                    <option value="SUBMITTED">Applied (Berkas Masuk)</option>
+                    <option value="SCREENING">Screening (Ditinjau)</option>
+                    <option value="INTERVIEW">Interview (Wawancara)</option>
+                    <option value="OFFERED">Offered (Penawaran Kerja)</option>
+                    <option value="REJECTED">Rejected (Belum Lolos)</option>
                   </select>
                 </div>
 
@@ -489,6 +496,7 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
                 <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                   <button
                     type="button"
+                    disabled={isUpdating}
                     onClick={() => setActiveAppForNotes(null)}
                     className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
                   >
@@ -497,10 +505,15 @@ export const RecruiterApplicantsPage: React.FC<RecruiterApplicantsPageProps> = R
 
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-extrabold text-slate-950 shadow-md transition hover:bg-amber-300 active:scale-95"
+                    disabled={isUpdating}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-5 py-2.5 text-xs font-extrabold text-slate-950 shadow-md transition hover:bg-amber-300 active:scale-95 disabled:opacity-50"
                   >
-                    <Send className="h-3.5 w-3.5" />
-                    <span>Simpan Perubahan</span>
+                    {isUpdating ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5" />
+                    )}
+                    <span>{isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
                   </button>
                 </div>
               </form>
