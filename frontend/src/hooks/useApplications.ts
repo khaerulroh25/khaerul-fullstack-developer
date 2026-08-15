@@ -1,112 +1,106 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Application, ApplicationStatus } from '../types/index.js';
-import { DUMMY_APPLICATIONS } from '../data/dummyData.js';
+import { applicationService, type SubmitApplicationPayload } from '../services/application.service.js';
 
 const STORAGE_KEY = 'indokerja_applications';
 
 /**
- * Custom hook untuk mengelola berkas lamaran kerja pelamar dan status seleksi ATS
+ * Custom hook untuk mengelola berkas lamaran kerja pelamar dan status seleksi ATS via backend API
  */
 export const useApplications = () => {
   const [applications, setApplications] = useState<Application[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DUMMY_APPLICATIONS;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return DUMMY_APPLICATIONS;
+      return [];
     }
   });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Sinkronisasi daftar lamaran ke localStorage
-  useEffect(() => {
+  // Memuat data lamaran live dari backend
+  const fetchApplications = useCallback(async () => {
+    setIsLoading(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
-    } catch (e) {
-      console.error('Gagal menyimpan berkas lamaran ke localStorage:', e);
+      const liveApps = await applicationService.getApplications();
+      if (liveApps) {
+        setApplications(liveApps);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(liveApps));
+      }
+    } catch (err) {
+      console.warn('Gagal memuat lamaran dari API backend:', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [applications]);
+  }, []);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   // Memeriksa apakah email pelamar sudah pernah melamar lowongan spesifik
   const hasUserApplied = useCallback(
     (jobId: string, userEmail: string = 'pelamar@indokerja.id') => {
       return applications.some(
-        (app) => app.jobId === jobId && app.applicantEmail.toLowerCase() === userEmail.toLowerCase()
+        (app) => app.jobId === jobId && app.applicantEmail?.toLowerCase() === userEmail.toLowerCase()
       );
     },
     [applications]
   );
 
-  // Mengajukan lamaran baru dengan validasi duplikasi
+  // Mengajukan lamaran baru langsung ke PostgreSQL via backend
   const submitApplication = useCallback(
-    (appData: Omit<Application, 'id' | 'createdAt' | 'logs'>): boolean => {
-      const isDuplicate = applications.some(
-        (app) =>
-          app.jobId === appData.jobId &&
-          app.applicantEmail.toLowerCase() === appData.applicantEmail.toLowerCase()
-      );
+    async (appData: Omit<Application, 'id' | 'createdAt' | 'logs'>): Promise<boolean> => {
+      try {
+        const payload: SubmitApplicationPayload = {
+          jobId: appData.jobId,
+          applicantName: appData.applicantName,
+          applicantEmail: appData.applicantEmail,
+          applicantPhone: appData.applicantPhone,
+          linkedinUrl: appData.linkedinUrl,
+          portfolioUrl: appData.portfolioUrl,
+          resumeUrl: appData.resumeUrl,
+          coverLetter: appData.coverLetter,
+          expectedSalary: appData.expectedSalary,
+          noticePeriod: appData.noticePeriod,
+        };
 
-      if (isDuplicate) {
+        const newApp = await applicationService.submitApplication(payload);
+        setApplications((prev) => [newApp, ...prev]);
+        return true;
+      } catch (err) {
+        console.error('Gagal mengajukan lamaran ke backend:', err);
         return false;
       }
-
-      const newApplication: Application = {
-        ...appData,
-        id: `app-${Date.now()}`,
-        status: 'Applied',
-        createdAt: new Date().toISOString(),
-        logs: [
-          {
-            id: `log-${Date.now()}`,
-            applicationId: `app-${Date.now()}`,
-            previousStatus: 'Applied',
-            newStatus: 'Applied',
-            changedBy: 'SYSTEM',
-            comment: 'Berkas lamaran diterima oleh sistem IndoKerja.id',
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      };
-
-      setApplications((prev) => [newApplication, ...prev]);
-      return true;
     },
-    [applications]
+    []
   );
 
-  // Memperbarui tahapan status seleksi pelamar oleh recruiter
+  // Memperbarui tahapan status seleksi pelamar oleh recruiter via backend API
   const updateApplicationStatus = useCallback(
-    (applicationId: string, newStatus: ApplicationStatus, recruiterNotes?: string) => {
-      setApplications((prev) =>
-        prev.map((app) => {
-          if (app.id === applicationId) {
-            const newLog = {
-              id: `log-${Date.now()}`,
-              applicationId: app.id,
-              previousStatus: app.status,
-              newStatus,
-              changedBy: 'RECRUITER' as const,
-              comment: recruiterNotes || `Status diubah ke ${newStatus}`,
-              timestamp: new Date().toISOString(),
-            };
+    async (applicationId: string, newStatus: ApplicationStatus, recruiterNotes?: string) => {
+      try {
+        const updated = await applicationService.updateStatus(applicationId, {
+          status: newStatus,
+          comment: recruiterNotes,
+        });
 
-            return {
-              ...app,
-              status: newStatus,
-              recruiterNotes: recruiterNotes || app.recruiterNotes,
-              logs: [newLog, ...app.logs],
-            };
-          }
-          return app;
-        })
-      );
+        setApplications((prev) =>
+          prev.map((app) => (app.id === applicationId ? updated : app))
+        );
+      } catch (err) {
+        console.error('Gagal memperbarui status lamaran di backend:', err);
+      }
     },
     []
   );
 
   return {
     applications,
+    isLoading,
     hasUserApplied,
     submitApplication,
     updateApplicationStatus,
+    refetchApplications: fetchApplications,
   };
 };
