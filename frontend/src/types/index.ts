@@ -6,7 +6,7 @@ export type ExperienceLevel = 'ENTRY_LEVEL' | 'JUNIOR' | 'MID_LEVEL' | 'SENIOR' 
 
 export type JobStatus = 'ACTIVE' | 'CLOSED' | 'DRAFT';
 
-export type ApplicationStatus = 'Applied' | 'Reviewing' | 'Shortlisted' | 'Rejected' | 'Accepted';
+export type ApplicationStatus = 'SUBMITTED' | 'SCREENING' | 'INTERVIEW' | 'OFFERED' | 'REJECTED';
 
 export interface AuthUser {
   id: string;
@@ -63,19 +63,16 @@ export interface Job {
 
 export interface ApplicationLog {
   id: string;
-  applicationId: string;
-  previousStatus: ApplicationStatus;
-  newStatus: ApplicationStatus;
-  changedBy: string;
-  comment?: string;
-  timestamp: string;
+  fromStatus?: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  comment?: string | null;
+  createdAt: string;
 }
 
 export interface Application {
   id: string;
   jobId: string;
   job: Job;
-  userId?: string;
   applicantName: string;
   applicantEmail: string;
   applicantPhone: string;
@@ -88,7 +85,7 @@ export interface Application {
   status: ApplicationStatus;
   recruiterNotes?: string;
   createdAt: string;
-  logs: ApplicationLog[];
+  logs?: ApplicationLog[];
 }
 
 export interface JobFilterState {

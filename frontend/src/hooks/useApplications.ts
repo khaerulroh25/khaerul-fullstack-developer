@@ -68,7 +68,7 @@ export const useApplications = (currentUser?: AuthUser | null) => {
         return true;
       } catch (err) {
         console.error('Gagal mengajukan lamaran ke backend:', err);
-        return false;
+        throw err;
       }
     },
     []
@@ -76,19 +76,16 @@ export const useApplications = (currentUser?: AuthUser | null) => {
 
   // Memperbarui tahapan status seleksi pelamar oleh recruiter via backend API
   const updateApplicationStatus = useCallback(
-    async (applicationId: string, newStatus: ApplicationStatus, recruiterNotes?: string) => {
-      try {
-        const updated = await applicationService.updateStatus(applicationId, {
-          status: newStatus,
-          comment: recruiterNotes,
-        });
+    async (applicationId: string, newStatus: ApplicationStatus, recruiterNotes?: string): Promise<Application> => {
+      const updated = await applicationService.updateStatus(applicationId, {
+        status: newStatus,
+        comment: recruiterNotes,
+      });
 
-        setApplications((prev) =>
-          prev.map((app) => (app.id === applicationId ? updated : app))
-        );
-      } catch (err) {
-        console.error('Gagal memperbarui status lamaran di backend:', err);
-      }
+      setApplications((prev) =>
+        prev.map((app) => (app.id === applicationId ? { ...app, ...updated } : app))
+      );
+      return updated;
     },
     []
   );
