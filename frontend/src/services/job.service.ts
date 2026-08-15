@@ -54,7 +54,31 @@ export const jobService = {
    * Membuat lowongan baru oleh recruiter
    */
   async createJob(payload: Partial<Job>): Promise<Job> {
-    const response = await api.post<GetJobDetailResponse>('/jobs', payload);
+    const body: Record<string, any> = {
+      companyId: payload.companyId,
+      title: payload.title,
+      category: payload.category,
+      jobType: payload.jobType,
+      experienceLevel: payload.experienceLevel,
+      location: payload.location,
+      isSalaryDisclosed: payload.isSalaryDisclosed ?? true,
+      description: payload.description,
+      requirements: payload.requirements || [],
+      benefits: payload.benefits || [],
+      status: payload.status || 'ACTIVE',
+    };
+
+    if (payload.salaryMin !== undefined && payload.salaryMin !== null) {
+      body.salaryMin = Number(payload.salaryMin);
+    }
+    if (payload.salaryMax !== undefined && payload.salaryMax !== null) {
+      body.salaryMax = Number(payload.salaryMax);
+    }
+    if (payload.deadline) {
+      body.deadline = payload.deadline;
+    }
+
+    const response = await api.post<GetJobDetailResponse>('/jobs', body);
     return response.data.data;
   },
 
