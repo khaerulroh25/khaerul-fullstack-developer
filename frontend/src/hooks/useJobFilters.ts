@@ -10,6 +10,11 @@ const DEFAULT_FILTERS: JobFilterState = {
   isRemoteOnly: false,
 };
 
+export interface DynamicCategory {
+  name: string;
+  count: number;
+}
+
 /**
  * Custom hook untuk mengelola state filter dan komputasi memoized lowongan kerja aktif
  */
@@ -65,15 +70,30 @@ export const useJobFilters = (jobs: Job[]) => {
     }
   }, []);
 
+  // Ekstraksi kategori 100% dinamis dan jumlah lowongan aktif secara real-time dari database
+  const availableCategories: DynamicCategory[] = useMemo(() => {
+    const countsMap = new Map<string, number>();
+    jobs.forEach((job) => {
+      if (job.category && (job.status === 'ACTIVE' || !job.status)) {
+        const trimmed = job.category.trim();
+        countsMap.set(trimmed, (countsMap.get(trimmed) || 0) + 1);
+      }
+    });
+    return Array.from(countsMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+    }));
+  }, [jobs]);
+
   // Evaluasi subset lowongan kerja terfilter berbasis useMemo
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
-      if (job.status !== 'ACTIVE') return false;
+      if (job.status && job.status !== 'ACTIVE') return false;
 
       if (filters.search) {
         const q = filters.search.toLowerCase();
         const matchTitle = job.title.toLowerCase().includes(q);
-        const matchCompany = job.company.name.toLowerCase().includes(q);
+        const matchCompany = job.company?.name?.toLowerCase().includes(q);
         const matchDesc = job.description.toLowerCase().includes(q);
         if (!matchTitle && !matchCompany && !matchDesc) return false;
       }
@@ -105,6 +125,7 @@ export const useJobFilters = (jobs: Job[]) => {
   return {
     filters,
     filteredJobs,
+    availableCategories,
     handleFilterChange,
     handleResetFilters,
     handleHeroSearch,
