@@ -56,10 +56,11 @@ export const App: React.FC = () => {
   const { jobs, isLoading: isJobsLoading, selectedJob, setSelectedJob, createJob } = useJobs();
   const {
     applications,
+    isLoading: isApplicationsLoading,
     hasUserApplied,
     submitApplication,
     updateApplicationStatus,
-  } = useApplications();
+  } = useApplications(currentUser);
   const { toasts, addToast, dismissToast } = useToast();
   const {
     filters,
@@ -270,6 +271,7 @@ export const App: React.FC = () => {
       {currentPage === "TRACKER" && (
         <ApplicationTrackerPage
           applications={applications}
+          isLoading={isApplicationsLoading}
           onNavigateToHome={() => navigateTo("LANDING")}
           onNavigateToJobs={scrollToJobs}
           onViewJobDetail={handleViewJobDetail}

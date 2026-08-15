@@ -40,6 +40,8 @@ const TRACKER_STATUS_TABS = [
 interface ApplicationTrackerPageProps {
   /** Daftar seluruh berkas lamaran yang telah diajukan pengguna */
   applications: Application[];
+  /** Status memuat data lamaran dari backend API */
+  isLoading?: boolean;
   /** Callback untuk kembali ke halaman utama / beranda */
   onNavigateToHome: () => void;
   /** Callback untuk scroll ke katalog lowongan kerja */
@@ -48,15 +50,9 @@ interface ApplicationTrackerPageProps {
   onViewJobDetail: (job: Job) => void;
 }
 
-/**
- * Komponen Halaman Pelacak Status Lamaran (ApplicationTrackerPage)
- *
- * Menampilkan status progresif pelamar (Applied -> Reviewing -> Shortlisted -> Accepted/Rejected),
- * feedback & undangan interview dari tim HR, serta riwayat lamaran yang diajukan.
- * Dioptimalkan dengan React.memo, useMemo filter, dan styling Tailwind CSS responsif.
- */
 export const ApplicationTrackerPage: React.FC<ApplicationTrackerPageProps> = React.memo(({
   applications,
+  isLoading = false,
   onNavigateToHome,
   onNavigateToJobs,
   onViewJobDetail,
@@ -239,7 +235,26 @@ export const ApplicationTrackerPage: React.FC<ApplicationTrackerPageProps> = Rea
         </div>
 
         {/* Daftar Kartu Status Lamaran */}
-        {filteredApplications.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div key={idx} className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm animate-pulse">
+                <div className="flex items-center gap-3.5 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-slate-200" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-40 bg-slate-200 rounded" />
+                    <div className="h-3 w-28 bg-slate-200 rounded" />
+                  </div>
+                </div>
+                <div className="h-8 w-full bg-slate-100 rounded-lg mb-4" />
+                <div className="border-t border-slate-100 pt-3 flex justify-between">
+                  <div className="h-3 w-28 bg-slate-200 rounded" />
+                  <div className="h-3 w-20 bg-slate-200 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredApplications.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center shadow-sm">
             <Clock className="mx-auto mb-3 h-10 w-10 text-slate-300" />
             <h3 className="text-base font-bold text-slate-900">

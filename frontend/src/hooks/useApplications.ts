@@ -1,38 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Application, ApplicationStatus } from '../types/index.js';
+import type { Application, ApplicationStatus, AuthUser } from '../types/index.js';
 import { applicationService, type SubmitApplicationPayload } from '../services/application.service.js';
-
-const STORAGE_KEY = 'indokerja_applications';
 
 /**
  * Custom hook untuk mengelola berkas lamaran kerja pelamar dan status seleksi ATS via backend API
  */
-export const useApplications = () => {
-  const [applications, setApplications] = useState<Application[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export const useApplications = (currentUser?: AuthUser | null) => {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Memuat data lamaran live dari backend
+  // Memuat data lamaran live dari backend saat user terotentikasi
   const fetchApplications = useCallback(async () => {
+    if (!currentUser) {
+      setApplications([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const liveApps = await applicationService.getApplications();
       if (liveApps) {
         setApplications(liveApps);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(liveApps));
       }
     } catch (err) {
       console.warn('Gagal memuat lamaran dari API backend:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     fetchApplications();
@@ -40,12 +36,14 @@ export const useApplications = () => {
 
   // Memeriksa apakah email pelamar sudah pernah melamar lowongan spesifik
   const hasUserApplied = useCallback(
-    (jobId: string, userEmail: string = 'pelamar@indokerja.id') => {
+    (jobId: string, userEmail?: string) => {
+      const targetEmail = userEmail || currentUser?.email;
+      if (!targetEmail) return false;
       return applications.some(
-        (app) => app.jobId === jobId && app.applicantEmail?.toLowerCase() === userEmail.toLowerCase()
+        (app) => app.jobId === jobId && app.applicantEmail?.toLowerCase() === targetEmail.toLowerCase()
       );
     },
-    [applications]
+    [applications, currentUser]
   );
 
   // Mengajukan lamaran baru langsung ke PostgreSQL via backend
