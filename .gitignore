@@ -22,9 +22,6 @@ build/
 .next/
 out/
 
-# Documentation / Internal Notes
-docs/
-
 # Logs
 npm-debug.log*
 yarn-debug.log*
